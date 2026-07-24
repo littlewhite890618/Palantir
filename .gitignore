@@ -2,7 +2,7 @@
 .env
 postgres_data/
 .claude/settings.json
-.claude/settings.local.json
+**/settings.local.json
 
 # 依賴 / 衍生
 node_modules/
@@ -14,5 +14,5 @@ md/data/pdf_cache/
 _dl/
 *.crdownload
 
-# React 有自己的 repo (ProjectPalentir)，另外管
-React/
+# React 的舊 git 歷史備份（整併後保留在本機、不進版控）
+_react_git_backup/
