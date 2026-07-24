@@ -1,0 +1,77 @@
+volumes:
+  n8n_storage:
+
+networks:
+  app_network:
+    driver: bridge
+  
+
+services:
+
+  postgres:
+    restart: always
+    image: postgres:16.4-alpine
+    container_name: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - ${POSTGRES_HOST_DIR}:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - app_network
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - C:/Users/evalu/Desktop/JOHNNY/n8ntest:/data/scripts
+    environment:
+    - N8N_CORS_ALLOWED_ORIGINS=http://localhost:3000
+    - NODE_FUNCTION_ALLOW_EXTERNAL=pdf-parse
+    - NODE_FUNCTION_ALLOW_BUILTIN=*
+    networks:
+      - app_network
+
+
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: craw4ai
+    restart: always
+    ports:
+      - "11235:11235"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=11235
+    volumes:
+      - C:/Users/evalu/Desktop/JOHNNY/n8ntest:/data/scripts
+    networks:
+      - app_network
+
+
+  react:
+    build: C:/Users/evalu/Desktop/JOHNNY/n8ntest/React
+    container_name: react
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - C:/Users/evalu/Desktop/JOHNNY/n8ntest/React/src:/app/src
+      - C:/Users/evalu/Desktop/JOHNNY/n8ntest/React/public:/app/public
+    environment:
+      - REACT_APP_N8N_URL=http://n8n:5678
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true    
+      - WDS_SOCKET_PORT=0                            
+    networks:
+      - app_network
+    depends_on:
+      - n8n
+
+
+
+     
