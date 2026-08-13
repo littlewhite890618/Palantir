@@ -8,11 +8,20 @@ postgres_data/
 node_modules/
 __pycache__/
 *.pyc
+React/build/
+# 匯出的加密資料：每次匯出內容全變（加密後是高亂度），進版控會讓 repo 快速膨脹。
+# 要重新產生就跑 export_subsidies skill。
+React/public/subsidies.enc.json
 
 # 執行期快取 / 下載暫存
 md/data/pdf_cache/
+subsidy_crawler/data/pdf_cache/
+.claude/skills/extract_schedule_amount/data/pdf_cache/
 _dl/
 *.crdownload
+
+# 排除所有 PDF（原始須知檔為可重新下載的二進位，不進版控）
+*.pdf
 
 # React 的舊 git 歷史備份（整併後保留在本機、不進版控）
 _react_git_backup/

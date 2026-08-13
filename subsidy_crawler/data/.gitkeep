@@ -1,0 +1,1 @@
+# 佔位：讓空的 data/ 目錄能進版控。實際產物（subsidy.sqlite、notices_*.csv）被 .gitignore 忽略。

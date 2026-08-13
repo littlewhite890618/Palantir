@@ -1,0 +1,6 @@
+# subsidy_crawler 產物（不進版控）
+data/*.sqlite
+data/*.csv
+data/pdf_cache/
+__pycache__/
+*.pyc

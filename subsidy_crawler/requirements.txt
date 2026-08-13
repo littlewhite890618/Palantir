@@ -1,0 +1,10 @@
+# --- P1/P2 抓取層 ---
+requests
+beautifulsoup4
+lxml
+playwright
+selenium
+# --- P3 萃取層（既有 extract_schedule_amount.py 的依賴）---
+pdfplumber
+python-docx
+odfpy

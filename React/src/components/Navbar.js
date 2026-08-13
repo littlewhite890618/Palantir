@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { lock, getExportedAt } from '../services/subsidyService';
 
 const navStyle = {
   backgroundColor: '#fff',
@@ -16,9 +17,21 @@ const navStyle = {
 
 function Navbar() {
   const location = useLocation();
-  const [showNotification, setShowNotification] = useState(false);
-  // 📌 showNotification 是用來控制通知視窗要不要顯示
-  // true = 顯示，false = 隱藏
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🔒 VIBE: 登出＝忘記這台機器記住的密碼。
+  //    平常密碼是永久記住的（1-3 人偶爾用，每次都要輸會讓人乾脆不用），
+  //    這顆按鈕是給「要換密碼」或「這台電腦要借人」時的保險。
+  //    reload 是刻意的——最乾淨地把已解密的資料從記憶體清掉，
+  //    回到 PasswordGate 的初始狀態。
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const handleLock = () => {
+    if (!window.confirm('登出後下次進入需要重新輸入密碼，確定要登出嗎？')) return;
+    lock();
+    window.location.reload();
+  };
+
+  const exportedAt = getExportedAt();
 
   return (
     <nav style={navStyle}>
@@ -37,116 +50,58 @@ function Navbar() {
             letterSpacing: '0.5px',
             padding: '8px 12px',
           }}>
-            🧭 Palentir
+            🧭 Palantir
           </div>
         </Link>
 
    
       </div>
 
-      {/* 右側：通知鈴鐺 */}
-      <div style={{ position: 'relative' }}>
+      {/* 右側：資料時間 + 收藏 + 登出 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
 
-        {/* 鈴鐺按鈕 */}
+        {/* 📌 資料匯出時間——這個站的資料是排程推上來的快照，不是即時的，
+            讓使用者知道自己看的是什麼時候的資料 */}
+        {exportedAt && (
+          <span style={{ fontSize: '12px', color: '#aaa', marginRight: '8px' }}>
+            資料更新於 {new Date(exportedAt).toLocaleDateString('zh-TW')}
+          </span>
+        )}
+
+        {/* 收藏入口 */}
+        <Link to="/favorites" style={{ textDecoration: 'none' }}>
+          <button
+            style={{
+              border: 'none',
+              background: location.pathname === '/favorites' ? 'rgba(26, 115, 232, 0.1)' : 'transparent',
+              cursor: 'pointer',
+              fontSize: '20px',
+              padding: '8px 10px',
+              borderRadius: '8px',
+              transition: 'background 0.2s',
+            }}
+            title="我的收藏"
+          >
+            ❤️
+          </button>
+        </Link>
+
+        {/* 登出（清除記住的密碼） */}
         <button
-          onClick={() => setShowNotification(!showNotification)}
-          // 📌 點一下顯示，再點一下隱藏，就是切換 true/false
+          onClick={handleLock}
           style={{
             border: 'none',
-            background: showNotification ? 'rgba(26, 115, 232, 0.1)' : 'transparent',
+            background: 'transparent',
             cursor: 'pointer',
-            fontSize: '22px',
+            fontSize: '18px',
             padding: '8px 10px',
             borderRadius: '8px',
             transition: 'background 0.2s',
-            position: 'relative',
           }}
+          title="登出（清除記住的密碼）"
         >
-          🔔
-          {/* 未讀紅點 */}
-          <span style={{
-            position: 'absolute',
-            top: '6px',
-            right: '6px',
-            width: '8px',
-            height: '8px',
-            background: '#e53935',
-            borderRadius: '50%',
-            border: '1.5px solid white',
-            // 📌 這是鈴鐺右上角的小紅點，代表有未讀通知
-          }} />
+          🔒
         </button>
-
-        {/* 通知下拉視窗 */}
-        {showNotification && (
-          <div style={{
-            position: 'absolute',
-            top: '52px',
-            right: '0',
-            width: '300px',
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-            border: '1px solid #eee',
-            overflow: 'hidden',
-            zIndex: 200,
-            // 📌 position absolute 讓視窗浮在鈴鐺按鈕正下方
-          }}>
-
-            {/* 通知視窗標題 */}
-            <div style={{
-              padding: '14px 18px',
-              borderBottom: '1px solid #f0f0f0',
-              fontWeight: '600',
-              fontSize: '15px',
-              color: '#333',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <span>通知</span>
-              <span style={{ fontSize: '12px', color: '#1a73e8', fontWeight: '400', cursor: 'pointer' }}>
-                全部已讀
-              </span>
-            </div>
-
-          {/* 通知內容 */}
-            <div style={{
-              padding: '20px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}>
-              {/* 未讀藍點 */}
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: '#1a73e8',
-                flexShrink: 0,
-              }} />
-              <p style={{ fontSize: '14px', color: '#333', fontWeight: '500' }}>
-                有 3 筆新的補助案！
-              </p>
-            </div>
-
-          </div>
-        )}
-
-        {/* 點擊其他地方關閉通知視窗 */}
-        {showNotification && (
-          <div
-            onClick={() => setShowNotification(false)}
-            style={{
-              position: 'fixed',
-              top: 0, left: 0,
-              width: '100vw', height: '100vh',
-              zIndex: 150,
-              // 📌 這是一個透明的全螢幕遮罩
-              // 點擊通知視窗以外的地方時，會觸發這個遮罩的 onClick 把視窗關掉
-            }}
-          />
-        )}
 
       </div>
     </nav>
