@@ -27,6 +27,12 @@ DOWNLOAD_URLS = [
     "https://www.industry-incentive.taipei/download/15",  # 獎勵補貼
 ]
 
+# 產業發展局 doed（doed.gov.taipei，ASP.NET）：內容頁直接列出各補助計畫的申請須知 PDF
+# （附件 title＝檔名帶「[另開新視窗]」前綴，下載走 www-ws.gov.taipei/Download.ashx）。
+# 調查結論：檔名不帶年份 → 常設計畫、就地更新（同上方 6 個補助頁），不篩年度、直接抓申請須知。
+DOED_ROOT = "https://doed.gov.taipei/"
+DOED_URL = DOED_ROOT + "Content_List.aspx?n=EFA24A4D59B05A13"
+
 
 def _notice_files(html):
     soup = BeautifulSoup(html, "lxml")
@@ -42,10 +48,25 @@ def _notice_files(html):
     return out
 
 
+def _doed_notices():
+    """doed 內容頁 → 附件 title 含「申請須知」的 PDF（常設、不篩年度）。"""
+    soup = BeautifulSoup(http.get(DOED_URL).content, "lxml")
+    out, seen = [], set()
+    for a in soup.find_all("a", href=True):
+        ti = a.get("title", "").replace("[另開新視窗]", "").strip()
+        if "申請須知" in ti and "Download" in a["href"]:
+            url = urljoin(DOED_ROOT, a["href"])
+            if url not in seen:
+                seen.add(url)
+                out.append((ti, url))
+    return out
+
+
 def find_notices(today=None):
     out = []
     for url in DOWNLOAD_URLS:
         resp = http.get(url)
         html = resp.content.decode("utf-8", "replace")
         out.extend(_notice_files(html))
+    out.extend(_doed_notices())   # 產業發展局 doed 各補助計畫申請須知
     return out

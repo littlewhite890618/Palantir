@@ -24,6 +24,26 @@ def render_html(url, wait_selector=None, timeout=45000):
     return html
 
 
+def render_html_click(url, click_texts, timeout=45000, settle_ms=3000):
+    """開瀏覽器載入 url，依序嘗試點擊「文字符合 click_texts 之一」的元素（點到即停），
+    等 settle_ms 後回傳渲染後 HTML。用於「內容要點某個分頁/按鈕才展開」的站（如 tdri 參考文件）。
+    找不到可點元素時不報錯，回傳未點擊的頁面 HTML（呼叫端自行判斷有無目標檔）。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, timeout=timeout, wait_until="networkidle")
+        for txt in click_texts:
+            try:
+                page.get_by_text(txt, exact=False).first.click(timeout=5000)
+                page.wait_for_timeout(settle_ms)
+                break
+            except Exception:
+                continue   # 這個文字點不到，換下一個候選
+        html = page.content()
+        browser.close()
+    return html
+
+
 def selenium_fetch(url, warmup="https://www.yunlin.gov.tw/", wait=8, headless=False):
     """用「反偵測 Selenium」開真 Chrome 抓頁面，繞過 Cloudflare 這類機器人偵測。
     先逛 warmup 首頁拿通行 cookie，再開目標頁，回傳渲染後 HTML。

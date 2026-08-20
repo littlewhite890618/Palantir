@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-08-13
+# 純實作層擴充：在既有 adapter 增加抓取來源、新增一個原住民機關 adapter，
+# 既有能力（巡檢各機關找當年度申請須知）的行為契約不變，故不寫 spec delta。
+skip_specs: true

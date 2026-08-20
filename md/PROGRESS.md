@@ -36,6 +36,26 @@ Palantir 後端（`subsidy_crawler/`）實作進度。權威規格見 [`PALANTIR
 - [ ] 每批產出 `(部門,檔名,連結)` CSV ＋ 逐筆人工核對（年度＝當前、無漏抓無誤植）
 - [ ] 共通處理：分頁、編碼、連線重試、告警雛形
 
+## P2.5 擴充抓取來源（8/13，OpenSpec change `expand-crawler-agency-sources`）
+> 目標：人工核對後發現部分機關還有其他官網/計畫頁放當年度須知，逐站補來源；新增1站。
+
+- [x] `sme.py` — 加 SBIR 官網（sbir.org.tw/sbir/dw_apply）來源；固定頁逐年換檔，自動跟上年度
+- [x] `eii.py` **改名為 `ida.py`**（`run.py` 匯入與 `SITES` key 同步改，`--site ida`）— 加 6 個來源：
+      產發局 keid cloud/citd 兩系統各兩計畫、nqa、assist、tmti、tdri IDDI（互動 render 點「參考文件」，
+      115已截止暫回0筆，明年新一期自動抓）
+- [x] `doit.py` — A+ 企業創新研發淬鍊計畫「計畫類型」動態收集全部子計畫「資料下載」頁申請須知
+- [x] `taoyuan.py` — 加經發局 edb（ASP.NET postback 搜尋「公告」→ 子頁申請須知）
+- [x] `kaohsiung.py` — 加經發局 edbkcg（列表含「公告」主題 → 子頁「補助計畫」PDF）
+- [x] `aoc.py` — 加 taaa 逐筆進子頁篩「申請須知」（目前該站無補助公告，邏輯保留回0筆）
+- [x] `taipei.py` — 加產業局 doed 頁面（常設計畫，不篩年度）
+- [x] **新增 `sites/cip.py`**（原住民族委員會）並註冊進 `run.py`
+- [ ] **moea.py 放棄**：經濟部補助計畫入口網（service.moea.gov.tw/EE502）結構已探明——
+      Cloudflare SPA，計畫卡片 `.content_block` 開 modal，「相關文件下載」分頁內為表單 POST
+      下載（`/Plan/DownSiteFile`，需真的點按鈕），列表另有 JS 分頁（1/2/3，共25筆混多年度）。
+      不建立 adapter，供之後若重啟參考。
+- [x] 29 站全數載入通過 `base.check()` 契約驗證；6 個快站(requests/搜尋型)整合測試通過，
+      2 個 Selenium 站(`ida`/`doit`)整合測試進行中
+
 ## P3 萃取入庫（8/17）
 > 目標：把抓到的檔案讀出內容、抽時程/金額、存進索引（複製既有引擎進專案，不 import）。
 
@@ -45,6 +65,19 @@ Palantir 後端（`subsidy_crawler/`）實作進度。權威規格見 [`PALANTIR
 - [ ] 去重/增量：以「連結」當 key，只處理新的
 - [ ] 抽查驗證：3~5 筆時程/金額對照原 PDF
 - [ ] 產出「本次新增／更新」清單
+
+## P3.5 補助須知 9 欄 LLM 結構化萃取（8/19，OpenSpec change `subsidy-notice-field-extraction`）
+> 目標：把 P3 從「時程/金額 2 欄純規則」擴為「LLM 抽 9 欄結構化」。輸出獨立 `data/fields_extracted.csv`，不動 year_check。
+
+- [x] 9 欄：標題(計畫名)/描述/申請機關/申請資格/補助金額上限/補助比例/申請截止日期/應備資料/申請方式/諮詢窗口（行業類別移除）
+- [x] `common/textio.py` — 文字層（由 extract_schedule_amount 搬入複製）＋ `extract_docx` 修合併儲存格 bug ＋ `download_via_browser`（403 自動 Selenium 繞 Cloudflare、一般化自 catch_yunlin）
+- [x] `common/llm.py` — 多供應商 LLM 客戶端（Gemini 主/OpenRouter 備）＋節流/退避重試/收斂輪替/截斷偵測/JSON 完整性；SYS_PROMPT＋各機關 hint
+- [x] `extract_fields.py` — 主流程：讀 CSV→去重→抽字→LLM→申請機關 deterministic 對映(`agency_of`)→寫 CSV；`load_done` 只跳成功列（可續傳）
+- [x] 模型校準：`gemini-3.6-flash` 免費 RPD 僅 20 不可用 → 主 `gemini-3.5-flash-lite`＋備 `gemini-3.1-flash-lite`（RPD 各 500）；~10–20s/份
+- [x] 全量：newnotices3.csv 去重 182 → **萃取成功 181/182**（桃園已補：換新來源 `invest.tycg.gov.tw/cp.aspx?n=848` 當年度 PDF；剩彰化 getFile 連結失效）
+- [x] **`postprocess.py` 後處理去重（8/20）**：類型A正規化(標題去空白標點/截止日標準化)＋規則1-4(標題/金額/截止)＋**規則5類型B**(同金額+標題包含+應備相似≥0.75，併同計畫不同標題)＋**申請類別守門**(個別/共同、單店/多店…不併)。篩選(金額+截止皆空)改 `--drop-empty` 選項、**預設關閉全數保留**。萃取181 → **去重後 156**（155成功+1失敗）。備份 `data/fields_raw181.csv`
+- [x] 交付：CSV `data/fields_extracted.csv`（15 欄）＋ 3 個可搜尋網頁（原始182/去重後156/被移除26，Artifact 同連結可更新）
+- [ ] 剩餘：彰化重找連結；`requirements.txt`/README 補 `GEMINI_API_KEY` 前提；eii 契約範本應備資料、AI中央廚房金額抽錯(類型C)人工複核
 
 ## P4 排程 ＋ 監控（8/19）
 > 目標：讓它定時自己跑、出事會告警。

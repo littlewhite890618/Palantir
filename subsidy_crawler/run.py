@@ -23,9 +23,9 @@ if hasattr(sys.stderr, "buffer"):
 from .common import http, store, render, base
 from .sites import (kinmen, tainan, yunlin, hualien, taitung, kaohsiung,
                     nantou, penghu, hsinchu_city, pingtung, yilan, hsinchu_county,
-                    lienchiang, eii, sme, keelung, taipei, ndc, doit, digiplus, trade,
+                    lienchiang, ida, sme, keelung, taipei, ndc, doit, digiplus, trade,
                     taoyuan, taichung, miaoli, chiayi_county, chiayi_city, changhua,
-                    aoc)
+                    aoc, cip)
 
 # 原檔快取資料夾（本專案自有，獨立）。
 PDF_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "pdf_cache")
@@ -45,7 +45,7 @@ SITES = {
     "yilan": yilan,
     "hsinchu_county": hsinchu_county,
     "lienchiang": lienchiang,
-    "eii": eii,
+    "ida": ida,
     "sme": sme,
     "keelung": keelung,
     "taipei": taipei,
@@ -60,6 +60,7 @@ SITES = {
     "chiayi_city": chiayi_city,
     "changhua": changhua,
     "aoc": aoc,
+    "cip": cip,
 }
 
 # 載入時就驗證每個 adapter 都符合契約（早點抓錯，不必等執行）

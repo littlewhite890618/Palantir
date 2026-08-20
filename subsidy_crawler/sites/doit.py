@@ -31,6 +31,10 @@ NEWS_LISTS = [
     "https://service.moea.gov.tw/EE514/tw/aiip/50.html",    # A+企業創新研發淬鍊計畫
     "https://service.moea.gov.tw/EE514/tw/uvtep/24.html",   # 無人載具科技創新沙盒
 ]
+# A+ 站選單（任一 aiip 頁都有完整左側選單）：其「計畫類型」下每個子計畫都有一頁「資料下載」，
+# 申請須知就放在那裡（如「11506前瞻型計畫申請須知」）。動態收集所有「資料下載」連結，
+# 新增子計畫（如無人機）自動納入。
+AIIP_MENU = "https://service.moea.gov.tw/EE514/tw/aiip/50.html"
 
 
 def _search_title(url, keyword, warmup=WARMUP, wait=15):
@@ -103,6 +107,21 @@ def _notice_files(html):
     return priority if priority else candidates
 
 
+def _aiip_datadownload_notices(today=None):
+    """A+「計畫類型」各子計畫的『資料下載』頁 → 申請須知附件。
+    先抓選單收集所有『資料下載』連結（各子計畫一個），再逐頁 render 抓附件。"""
+    menu_html = render.selenium_fetch(AIIP_MENU, warmup=WARMUP, wait=14, headless=False)
+    soup = BeautifulSoup(menu_html, "lxml")
+    dl_urls = list(dict.fromkeys(
+        urljoin(AIIP_MENU, a["href"]) for a in soup.find_all("a", href=True)
+        if a.get_text(strip=True) == "資料下載"))
+    out = []
+    for u in dl_urls:
+        html = render.selenium_fetch(u, warmup=WARMUP, wait=12, headless=False)
+        out.extend(_notice_files(html))
+    return out
+
+
 def find_notices(today=None):
     out = []
     for list_url in NEWS_LISTS:
@@ -110,4 +129,5 @@ def find_notices(today=None):
         for durl in _search_result_links(search_html, list_url, today=today):
             detail_html = render.selenium_fetch(durl, warmup=WARMUP, wait=12, headless=False)
             out.extend(_notice_files(detail_html))
+    out.extend(_aiip_datadownload_notices(today=today))   # A+ 計畫類型各子計畫資料下載
     return out
