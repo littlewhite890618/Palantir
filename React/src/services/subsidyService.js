@@ -2,6 +2,12 @@
 const DATA_URL = `${process.env.PUBLIC_URL}/subsidies.enc.json`;
 const PASSWORD_KEY = 'palentir_unlock_password';
 
+// 本機開發用：設定了這個環境變數（docker-compose.yml 的 react 服務才會有）就直接打
+// dev_api.py 拿即時、未加密的資料庫內容，跳過「靜態加密檔+密碼」那一整套。
+// 只影響 `npm start`（docker-compose 的環境變數），`deploy_palantir` 是在本機另外
+// 執行 `npm run build`、不吃這個環境變數，不會誤打包進正式發布版本。
+export const LOCAL_API_URL = process.env.REACT_APP_LOCAL_API_URL || null;
+
 // 分別記錄解密的資料與匯出時間，避免每次都要重新下載/解密
 let cachedRows = null;
 let cachedExportedAt = null;
@@ -103,9 +109,35 @@ export function getExportedAt() {
   return cachedExportedAt;
 }
 
+// 本機開發模式：直接打 dev_api.py，不用密碼、不解密。
+async function fetchFromLocalApi() {
+  if (cachedRows) return cachedRows;
+  if (inFlight) return inFlight;
+
+  inFlight = (async () => {
+    try {
+      const response = await fetch(LOCAL_API_URL, { cache: 'no-cache' });
+      if (!response.ok) throw new Error(`本機API取得資料失敗（HTTP ${response.status}）`);
+      const rows = await response.json();
+      cachedRows = rows;
+      cachedExportedAt = null;   // 本機模式沒有「匯出時間」這個概念，資料本來就是即時的
+      return rows;
+    } catch (error) {
+      console.error('本機API取得資料失敗:', error);
+      return [];
+    } finally {
+      inFlight = null;
+    }
+  })();
+
+  return inFlight;
+}
+
 // 主程式：取得所有補助案件資料，回傳陣列
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export const getAllSubsidy = async () => {
+  if (LOCAL_API_URL) return fetchFromLocalApi();
+
   if (cachedRows) return cachedRows;
 
   // 多個頁面同時掛載時共用同一個請求，不要重複下載+解密

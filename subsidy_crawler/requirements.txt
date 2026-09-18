@@ -8,3 +8,5 @@ selenium
 pdfplumber
 python-docx
 odfpy
+# --- P4 資料庫同步層 ---
+psycopg2

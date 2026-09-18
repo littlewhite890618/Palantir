@@ -3,6 +3,7 @@ data/*.sqlite
 data/*.csv
 data/*.jsonl
 data/pdf_cache/
+data/db_backup_*.sql
 data/*.log
 __pycache__/
 *.pyc

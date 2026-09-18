@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { unlock, unlockWithStored, hasStoredPassword } from '../services/subsidyService';
+import { unlock, unlockWithStored, hasStoredPassword, LOCAL_API_URL } from '../services/subsidyService';
 
 // PasswordGate 元件負責在使用者輸入正確密碼前，顯示一个輸入密碼的畫面來阻擋對補助案資料的存取。
 function PasswordGate({ children }) {
+  // Hooks 一律要在最上面無條件呼叫（React 規則），本機開發模式的提前放行要放在
+  // 所有 Hooks 宣告「之後」，不能放在前面直接 return——那樣會讓 Hooks 呼叫次數
+  // 依條件變動，違反 Rules of Hooks。
+
   //密碼解鎖狀態、使用者輸入的密碼、忙碌狀態、錯誤訊息、是否正在檢查記住的密碼
   const [unlocked, setUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  // 開場先用記住的密碼試解一次，這段期間不要閃過密碼畫面
-  const [checking, setChecking] = useState(() => hasStoredPassword());
+  // 開場先用記住的密碼試解一次，這段期間不要閃過密碼畫面；本機開發模式不用密碼流程，
+  // 不需要這段「檢查中」的狀態。
+  const [checking, setChecking] = useState(() => !LOCAL_API_URL && hasStoredPassword());
 
-  //已經登入過的使用者，或瀏覽器記住了密碼，會自動解鎖
+  //已經登入過的使用者，或瀏覽器記住了密碼，會自動解鎖（本機開發模式跳過整段）
   useEffect(() => {
+    if (LOCAL_API_URL) return;
     if (!hasStoredPassword()) return;
 
     let cancelled = false;
@@ -47,6 +53,9 @@ function PasswordGate({ children }) {
       setBusy(false);
     }
   };
+
+  // 本機開發模式（LOCAL_API_URL 有設）：資料本來就沒加密，密碼畫面沒有意義，直接放行。
+  if (LOCAL_API_URL) return children;
 
   // 用記住的密碼自動解鎖中——空白畫面比閃一下密碼框好
   if (checking) {
@@ -88,7 +97,7 @@ function PasswordGate({ children }) {
         <p style={{ fontSize: '14px', color: '#888', marginBottom: '28px' }}>
           請輸入密碼以檢視補助案資料
         </p>
-      //輸入密碼的欄位，若有錯誤訊息則顯示紅色邊框
+      {/* 輸入密碼的欄位，若有錯誤訊息則顯示紅色邊框 */}
         <input
           type="password"
           value={password}

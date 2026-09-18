@@ -64,9 +64,16 @@ services:
       - C:/Users/evalu/Desktop/JOHNNY/n8ntest/React/public:/app/public
     environment:
       - REACT_APP_N8N_URL=http://n8n:5678
+      # 本機開發用：直接讀 dev_api.py（在本機另外用 python -m subsidy_crawler.dev_api 啟動），
+      # 跳過加密靜態檔+密碼那一套。只影響這個 docker-compose 的 npm start，deploy_palantir
+      # 是在本機另外執行 npm run build、不吃這個環境變數，不會被誤打包進正式發布版本。
+      # 注意：這個網址是「瀏覽器」要拿去 fetch 的（REACT_APP_* 會被打包進JS bundle、
+      # 在瀏覽器裡執行），瀏覽器永遠跑在本機（host），不是在 container 網路裡，
+      # 所以用 localhost，不是 host.docker.internal（那個是給 container 內部連回host用的）。
+      - REACT_APP_LOCAL_API_URL=http://localhost:8000/api/subsidies
       - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true    
-      - WDS_SOCKET_PORT=0                            
+      - WATCHPACK_POLLING=true
+      - WDS_SOCKET_PORT=0
     networks:
       - app_network
     depends_on:
