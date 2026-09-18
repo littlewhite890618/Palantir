@@ -5,16 +5,18 @@ common/store.py — 把抓到的須知記錄到 CSV（獨立存放）。
 - 一列 = 一份須知檔。
 - 用「連結」當 key 去重：同一份再抓只覆蓋該列，不會重複新增。
 - 欄位刻意對齊萃取引擎的輸入（部門 / 檔案名稱 / 連結），P3 可直接接。
-- 檔案：subsidy_crawler/data/notices.csv（utf-8-sig，Excel 打得開）。
+- 檔案：subsidy_crawler/data/1_crawled_raw.csv（utf-8-sig，Excel 打得開，人工核對備份）；
+  同步寫一份同路徑 .jsonl（一行一筆 JSON object），供下游程式（extract_fields.py）直接讀取。
 """
 import os
 import csv
+import json
 from datetime import datetime
 
 # 本檔在 common/，往上一層是 subsidy_crawler/，再進 data/。
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "..", "data")
-DEFAULT_CSV = os.path.join(DATA_DIR, "notices.csv")
+DEFAULT_CSV = os.path.join(DATA_DIR, "1_crawled_raw.csv")
 
 # CSV 欄位（固定順序）。前三欄＝萃取引擎的輸入格式。
 FIELDS = ["部門", "檔案名稱", "連結", "抓取時間"]
@@ -31,8 +33,8 @@ def _read_existing(path):
 
 
 def save(department, notices, path=DEFAULT_CSV):
-    """把 notices=[(檔名, 連結), ...] 寫進 CSV。以「連結」去重（已存在則覆蓋該列）。
-    回傳 (新增數, 更新數)。"""
+    """把 notices=[(檔名, 連結), ...] 寫進 CSV，同步寫一份同路徑 .jsonl 鏡像（供下游程式讀取）。
+    以「連結」去重（已存在則覆蓋該列）。回傳 (新增數, 更新數)。"""
     os.makedirs(DATA_DIR, exist_ok=True)
     rows = _read_existing(path)                       # 先載入既有的（為了去重）
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -50,4 +52,8 @@ def save(department, notices, path=DEFAULT_CSV):
         w.writeheader()
         for row in rows.values():
             w.writerow(row)
+    jsonl_path = os.path.splitext(path)[0] + ".jsonl"
+    with open(jsonl_path, "w", encoding="utf-8") as f:
+        for row in rows.values():
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
     return added, updated
