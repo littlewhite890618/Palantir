@@ -28,10 +28,12 @@ const AMOUNT_BUCKETS = ['100萬以下', '100-500萬', '500-1000萬', '1000-3000�
 function getAmountBucket(amount) {
   if (!amount) return null;
   if (amount.includes('%')) return '依比例補助';
-  // 特例：「一億」是字串（不是純數字），單獨歸到「一億以上」
-  if (amount === '一億') return '一億以上';
-  const num = Number(amount);
-  if (Number.isNaN(num)) return null;
+  if (amount.includes('億')) return '一億以上';
+  // amount 實際存的是「100萬元」「3000萬元」這種帶單位的字串，不是純數字，
+  // 所以要取開頭的數字部分來判斷區間，不能直接 Number(amount)（會是 NaN）
+  const match = amount.match(/^(\d+(\.\d+)?)/);
+  if (!match) return null;
+  const num = Number(match[1]);
   if (num < 100) return '100萬以下';
   if (num < 500) return '100-500萬';
   if (num < 1000) return '500-1000萬';

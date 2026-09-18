@@ -104,6 +104,12 @@ function SubsidyDetailPage() {
 
       {/* 下半部：應備資料 */}
       <DocumentSection icon="📎" title="應備資料" content={item.required_documents} />
+
+      {/* 申請方式 */}
+      <DocumentSection icon="📝" title="申請方式" content={item.application_method} />
+
+      {/* 諮詢窗口 */}
+      <DocumentSection icon="📞" title="諮詢窗口" content={item.contact_window} />
     </div>
   );
 }

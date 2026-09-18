@@ -45,7 +45,7 @@ function SubsidyCard({ item, isFavorited, onToggleFavorite }) {
           <span>📅 補助期限：{item.deadline}</span>
           <span>💰 {formatAmount(item.amount)}</span>
         </div>
-       //下載按鈕，若有 source_url 則可點擊，否則顯示灰色不可點
+        {/* 下載按鈕，若有 source_url 則可點擊，否則顯示灰色不可點 */}
         {item.source_url ? (
           <a
             href={item.source_url}
