@@ -2,11 +2,10 @@
 """
 sites/taoyuan.py — 桃園市 adapter【樣板②：requests，單頁多筆】。
 
-新聞頁（/news）是 SPA，render 也拓不到列表內容，原因不明。改用「檔案下載」頁
-（/download/1，申請須知及附件），純 requests 就抓得到，不用開瀏覽器。
-每個檔案是一個 li.news-group：連結（<a>）沒有文字，檔名在旁邊的
-<h5 class="news-heading">（同金門「檔名在另一個元素」的模式）。
-檔名清楚標年度（如「115年SBIR申請須知」），篩選：當年度 + 像須知。
+地方型 SBIR 須知抓「投資桃園」入口頁（invest.tycg.gov.tw/cp.aspx?n=848）：這是**穩定頁面**
+（頁 ID 固定、每年把當年度須知放上去），錨點文字就是檔名（如「115年SBIR申請須知.pdf」），
+連結指向 ws.tycg.gov.tw 的真 PDF。篩「錨點文字含申請須知 + 當年度」即可，逐年自動跟上。
+（原來源 taoyuan-sbir.tw/download 的 SBIR 須知下載會回舊版 .doc/OLE、管線不支援，已移除。）
 
 另外抓經發局 edb（edb.tycg.gov.tw，ASP.NET WebForms）：最新消息預設列表是一般市政新聞，
 補助公告要用站上搜尋器才撈得到。搜「公告」（postback：action 帶 &Create=1、按鈕值
@@ -20,8 +19,8 @@ from bs4 import BeautifulSoup
 from ..common import http, year
 
 DEPARTMENT = "桃園市"
-ROOT = "https://taoyuan-sbir.tw/"
-DOWNLOAD_URL = "https://taoyuan-sbir.tw/download/1"
+
+INVEST_URL = "https://invest.tycg.gov.tw/cp.aspx?n=848"   # 投資桃園·地方型SBIR（穩定頁，逐年換檔）
 
 EDB_ROOT = "https://edb.tycg.gov.tw/"
 EDB_LIST = EDB_ROOT + "News.aspx?n=3749&sms=9954"
@@ -70,17 +69,26 @@ def _edb_notices(today=None):
     return out
 
 
-def find_notices(today=None):
-    resp = http.get(DOWNLOAD_URL)
-    soup = BeautifulSoup(resp.content, "lxml")
-    out = []
-    for li in soup.select("li.news-group"):
-        a = li.select_one("a[href]")
-        name_el = li.select_one(".news-heading")
-        if a is None or name_el is None:
+def _invest_notices(today=None):
+    """投資桃園·地方型 SBIR 頁（cp.aspx?n=848）：錨點文字含『申請須知』＋當年度 → 取其 PDF 連結。
+    頁 ID 固定、逐年換檔，錨點文字即檔名（如『115年SBIR申請須知.pdf』），連結指向 ws.tycg.gov.tw 真 PDF。"""
+    soup = BeautifulSoup(http.get(INVEST_URL).content, "lxml")
+    out, seen = [], set()
+    for a in soup.find_all("a", href=True):
+        name = a.get_text(strip=True)
+        if not name:
             continue
-        name = name_el.get_text(strip=True)
-        if year.has_current_year(name, today) and year.looks_like_notice(name):
-            out.append((name, urljoin(ROOT, a["href"])))
-    out.extend(_edb_notices(today=today))   # 經發局 edb 搜「公告」找申請須知
+        if year.looks_like_notice(name) and year.has_current_year(name, today):
+            url = urljoin(INVEST_URL, a["href"])
+            if url not in seen:
+                seen.add(url)
+                name = re.sub(r"\s*\(另開新視窗\)\s*$", "", name).strip()
+                out.append((name, url))
+    return out
+
+
+def find_notices(today=None):
+    out = []
+    out.extend(_invest_notices(today=today))   # 投資桃園 cp.aspx?n=848（地方型 SBIR 須知，穩定頁）
+    out.extend(_edb_notices(today=today))       # 經發局 edb 搜「公告」找申請須知
     return out

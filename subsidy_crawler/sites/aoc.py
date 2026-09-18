@@ -54,6 +54,14 @@ TAAA_ROOT = "https://www.taaa.org.tw/"
 TAAA_LIST = TAAA_ROOT + "news/news"
 _TAAA_MAX_PAGES = 20
 
+# smebiz.org.tw（財團法人資訊工業策進會代管，「商業服務業智慧轉型專區」檔案下載區）：
+# 提升商業服務業營運效能強化韌性計畫（單店導入/多店升級/整合型補助）等計畫在 aoc.gov.tw 官網
+# 常被拆成好幾個「附件N-M」片段檔各自收錄（見 extract_fields.py 的 _is_attachment_fragment），
+# 這個頁面提供官方自己合併好的單一完整PDF，用來補回那幾個計畫的乾淨版本。已查證這個頁面會
+# 逐年更新（同時有「115年5月修正版」「第二梯次收件」等多版本標記並存，不是靜態頁面）。
+SMEBIZ_ROOT = "https://www.smebiz.org.tw/"
+SMEBIZ_DOWNLOAD = SMEBIZ_ROOT + "download.php"
+
 
 def _search_page(keyword, page, today=None):
     """POST 搜尋「keyword」+ 當年度起，抓「單一頁」→ 回傳 [(公告標題, 詳情網址), ...]。"""
@@ -163,10 +171,41 @@ def _taaa_notices(today=None):
     return out
 
 
+def _smebiz_notices():
+    """smebiz.org.tw/download.php：每筆記錄(row)通常掛好幾個檔案，f=1固定是官方合併好的完整
+    PDF（須知本體+前幾號附件），f=2/f=3是另外拆出來的附件檔——只取PDF那個（用icon圖示判斷，
+    比用URL的f=數字更穩，避免像aoc.gov.tw那樣把單一份須知拆成好幾筆碎片檔各自收錄）。不套用
+    looks_like_notice篩選（這個頁面本身就是專屬檔案下載區，title都已含「申請須知」）、不套用
+    年度篩選（很多標題本身沒有年份字樣，靠標題篩年度會誤刪，同本檔其他函式的既有理由）。
+    包try/except：這是附加來源，網站打不開或改版導致抓不到東西時，只印警告、回傳空清單，
+    不能讓這個來源的問題連帶讓aoc.gov.tw主要來源（同一個find_notices()呼叫）也爬不到。"""
+    try:
+        html = http.get(SMEBIZ_DOWNLOAD).content.decode("utf-8", "replace")
+    except Exception as ex:
+        print(f"[smebiz.org.tw] 抓取失敗，略過這個來源：{type(ex).__name__}: {ex}")
+        return []
+    soup = BeautifulSoup(html, "lxml")
+    out = []
+    for row in soup.select(".download-table-tr"):
+        title_el = row.select_one(".title")
+        if not title_el:
+            continue
+        name = title_el.get_text(strip=True)
+        pdf_a = next((a for a in row.find_all("a", href=True)
+                      if a.find("img") and "icon-pdf" in (a.find("img").get("src") or "")), None)
+        if not pdf_a:
+            continue
+        out.append((name, urljoin(SMEBIZ_ROOT, pdf_a["href"])))
+    if not out:
+        print("[smebiz.org.tw] 抓到0筆，網頁結構可能改版了，需要人工檢查")
+    return out
+
+
 def find_notices(today=None):
     out = []
     for _title, durl in _search(today=today):
         detail_html = http.get(durl).content.decode("utf-8", "replace")
         out.extend(_notice_files(detail_html))
     out.extend(_taaa_notices(today=today))   # taaa 新聞快訊（目前無申請須知，保留邏輯）
+    out.extend(_smebiz_notices())
     return out
