@@ -2,7 +2,9 @@
 """
 common/llm.py — 用 OpenRouter 免費模型把須知全文萃取成 9 個結構化欄位。
 
-- 金鑰只從環境變數 OPENROUTER_API_KEY 讀，不落地成明碼。
+- 金鑰從環境變數 GEMINI_API_KEY／OPENROUTER_API_KEY 讀；環境變數沒設時，會補讀一次
+  repo 根目錄的 .env（KEY=VALUE 純文字，已在根 .gitignore、不進版控），純標準庫解析、
+  不裝 python-dotenv。已存在的真實環境變數優先，.env 只補缺的。
 - MODELS：免費模型清單（可抽換；免費名單會變動，跑前對 OpenRouter 現況確認）。
 - 容錯：HTTP 429／非 200／JSON 解析失敗／輸出被截斷（finish_reason=length）／
   缺欄位 → 換清單下一個模型重試，輪替至成功或用盡。
@@ -29,8 +31,8 @@ PROVIDERS = {
 # (供應商, 模型)：主用 Gemini（免費額度大），OpenRouter 免費模型當備援 fallback。
 # 要換模型只改這個清單，其餘程式不動；某供應商沒設金鑰會自動略過其模型。
 MODELS = [
-    ("gemini", "gemini-3.5-flash-lite"),                # 主：免費 RPD 500（3.6-flash 只有 20）
-    ("gemini", "gemini-3.1-flash-lite"),                # Gemini 備：另一把 RPD 500
+    ("gemini", "gemini-3.5-flash-lite"),                # 主：免費 RPD 500（2026-08-21 改主：3.5 分鐘級TPM太緊繃）
+    ("gemini", "gemini-3.5-flash"),                # Gemini 備：另一把 RPD 500（3.6-flash 只有 20，不用）
     ("openrouter", "z-ai/glm-5.2:free"),                # 最終備援
     ("openrouter", "nvidia/nemotron-3-super-120b-a12b:free"),
 ]
@@ -128,8 +130,33 @@ def hint_for(department, is_sbir):
     return _DEPT_HINT.get(department, "")
 
 
+_DOTENV_LOADED = [False]
+_ENV_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
+
+
+def _load_dotenv():
+    """輕量讀 repo 根目錄 .env（KEY=VALUE，一行一組），只在對應環境變數還沒設時才補上，
+    不覆蓋已存在的真實環境變數。手寫解析、不裝 python-dotenv（專案原則：完全獨立自包含）。
+    只跑一次；.env 不存在（例如排程環境改用真的系統環境變數）就靜默略過。"""
+    if _DOTENV_LOADED[0]:
+        return
+    _DOTENV_LOADED[0] = True
+    if not os.path.exists(_ENV_PATH):
+        return
+    with open(_ENV_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip().strip('"').strip("'")
+            os.environ.setdefault(k, v)
+
+
 def _key(provider):
-    """回傳該供應商的金鑰（環境變數）；沒設回 None（該供應商模型會被略過）。"""
+    """回傳該供應商的金鑰（環境變數，缺的話先補讀 .env）；沒設回 None（該供應商模型會被略過）。"""
+    _load_dotenv()
     env = PROVIDERS[provider]["key_env"]
     return os.environ.get(env, "").strip() or None
 
