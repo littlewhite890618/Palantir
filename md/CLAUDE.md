@@ -8,4 +8,5 @@
 | `PALANTIR_SPEC.md` | **Palantir 前端（React/）規格權威來源**：HomePage 篩選規則（機關/金額/期限）、瀏覽/搜尋共用分頁設計、資料欄位背景、收藏功能設計、詳細頁設計。**文末另含「Palantir 後端規格」**：`subsidy_crawler/` 補助案自動抓取管線（28 站分批 A/B/C、公告發布日過濾、重用 `extract_schedule_amount` 萃取引擎、四階段 P1–P4、先獨立存放） | 要跑/改 `React/` 頁面邏輯、或後端抓取管線前必讀 |
 | `PROGRESS.md` | **後端實作進度追蹤**：`subsidy_crawler/` 四階段 P1–P4 的小任務清單（`- [ ]` 待辦框）、里程碑 M1–M4、每週 6hr 節奏、完全獨立原則（不 import skills） | 要看/更新後端抓取系統做到哪、接下來做什麼時 |
 | `DEPLOY_FRONTEND.md` | **前端部署權威來源**：定案架構（PostgreSQL→gzip→加密 JSON→GitHub Pages 靜態站，零對外開放 port）、已排除方案與原因（Cloudflare Tunnel/ngrok/VPS/Google Sheet 為何不用）、匯出/解密/發布各元件、**日常更新線上資料的流程（兩個指令）**、備份與交易慣例、架構天花板 | 要跑/改部署、更新線上資料、或討論上線方式前必讀。相關 skill：`export_subsidies`、`deploy_palantir` |
+| `RECORD.md` | **去重驗證紀錄**：165筆(舊)/168筆(整合萃取前全文比對機制後)兩版本的總筆數、疑似重複逐群分析與原因、本輪實際修改項目（冒號正規化、申請類別守門清單擴充、`_fulltext_prefilter`）、去重後合理筆數範圍估算、待辦事項 | 要查/比對 `subsidy_crawler` 去重測試結果、追查某組資料為何沒被去重、或接續補齊已知缺口前必讀 |
 
