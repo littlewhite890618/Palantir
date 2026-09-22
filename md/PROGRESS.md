@@ -15,14 +15,19 @@
 ### N. 通知模組
 
 - [ ] **排程 ＋ 監控**（原後端 P4，N1 的前置作業）：讓抓取管線定時自己跑、出事會告警
-  - [ ] Python 排程（APScheduler／cron，或掛 n8n 觸發 `run.py`），每日或每週
-  - [ ] 增量巡檢 ＋「本次新增」報表
-  - [ ] 告警：某站 0 筆／連續失敗／解析失敗 → email 或 n8n webhook
-  - [ ] 手動觸發一次 ＋ 模擬某站失敗，確認告警與報表正確
+  > OpenSpec change `pipeline-incremental-review-queue`（Change A）；程式完成、驗證通過（9/22），剩排程任務本身待建
+  - [ ] 排程：Windows 工作排程器呼叫 `run_pipeline.bat`（入口與設定步驟已備好，見 `subsidy_crawler/README.md`；
+        待使用者測完整條管線後決定執行時間、建立排程任務）
+  - [x] 增量偵測 ＋「本次新增」報表：（機關, 連結）比對，新案進待審表 `subsidies_pending`，
+        同機關同網域且標題相似 ≥0.85 標「疑似舊案」；輸出 `data/new_this_run.csv`
+  - [x] 告警（只寫檔）：`data/run_summary.json` 每次摘要＋`data/alerts.log`（管線失敗、萃取失敗比例 ≥10%）
+  - [x] 驗證：測試資料庫 `palantir_verify` 跑新案判定／審核／告警，確認正式 subsidies 不變
+        （實測 8/31 結果對正式表 165 筆：新案 6、跳過 154、疑似舊案 2）
 - [ ] **N1 新案上線通知**（9/16–9/30）：定義功能需求有哪些最終設計一個完整新增案的流程，
       讓後端捕捉到所有的補助案經過人工頁面的審核最後去重不重複的補助案呈現給前端
       > ⚠️ 依賴上方「排程 ＋ 監控」——後端需先能辨識「這次比上次多了哪些」，N1 才有資料
-      > 來源；目前 `common/db.py` 是整表 TRUNCATE＋全量 INSERT，尚無法分辨新舊
+      > 來源。Change A 完成後由 Change B 接手：本機審核頁（透過 dev_api 呼叫
+      > `db.approve_pending`／`reject_pending`）、export 只輸出已審核、前端鈴鐺
 - [ ] **N2 新案列表查看**（9/30–10/6）：定義功能需求設計一個前端頁面將這些新捕捉的補助案
       列在這個頁面
 

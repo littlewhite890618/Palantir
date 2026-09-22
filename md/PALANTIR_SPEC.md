@@ -24,6 +24,11 @@ Palantir 前端（`React/`）規格文件。依 [`DEV_WORKFLOW.md`](DEV_WORKFLOW
 - `deadline`：37% 是空值，其餘是 `YYYY-MM-DD` 格式，橫跨 2013~2027（很多已經過期）。
 - `start_date`：目前 100% 全空，前端沒有任何邏輯依賴這個欄位。
 
+> **寫入方式（2026-09 起）**：管線不再整表覆蓋 `subsidies`。新抓到的案子先進待審表
+> `subsidies_pending`（欄位同 `subsidies`，另加 `status` pending/approved/rejected、`first_seen_at`、
+> `reviewed_at`、`suspected_dup_of`），審核通過才寫進 `subsidies`。身分 key＝（`category`, `source_url`）。
+> 詳見 [`subsidy_crawler/README.md`](../subsidy_crawler/README.md)「一鍵管線＋排程＋監控」。
+
 完整欄位（`\d subsidies`）：`id / title / category / amount / start_date / deadline /
 description / created_at / source_url / subsidy_timeline / eligibility / required_documents`。
 其中 `eligibility`（申請資格）、`required_documents`（應備資料）是為詳細頁新增的 `TEXT`
@@ -307,7 +312,7 @@ data/notices.csv（＋原檔快取 pdf_cache）
 | **P1 框架＋抓取流程測試** | 抽 `common/*`（含 `common/render.py`）、定義 `base.SiteAdapter`、**金門/臺南/雲林三站各跑通，證明 requests／render／Selenium 三條抓取路徑** | `common/*.py`、`common/render.py`、`sites/kinmen.py`、`sites/tainan.py`、`sites/yunlin.py`、`run.py`、`requirements.txt` |
 | **P2 逐站 adapter** | 每站實作：列表URL＋篩選條件＋詳情找須知檔；分批逐筆核對 | `sites/<slug>.py`×28 |
 | **P3 萃取入庫** | 各批 CSV 交給專案內 `common/extract.py`（複製自既有引擎、改路徑）跑萃取 → 載入索引 | `common/extract.py`、`common/store.py` |
-| **P4 排程＋監控** | APScheduler／cron／n8n 觸發；增量＋「本次新增」報表；**告警**（0 筆/失敗→email 或 n8n webhook） | `run.py`、排程設定 |
+| **P4 排程＋監控** | Windows 工作排程器觸發 `run_pipeline.bat`；增量（新案進待審表 `subsidies_pending`）＋「本次新增」報表；**告警**只寫檔（管線失敗/萃取失敗比例 ≥10% → `data/alerts.log`）（2026-09 定案，OpenSpec `pipeline-incremental-review-queue`） | `pipeline.py`、`common/db.py`、`common/monitor.py`、`run_pipeline.bat` |
 
 ## 時程（萃取層已存在，故縮短；依每週工時調整）
 
