@@ -9,8 +9,9 @@ subsidy_crawler/dev_api.py — 本機開發用：把 subsidies 表用未加密 J
 
 用法：
     python -m subsidy_crawler.dev_api
-    （預設監聽 0.0.0.0:8000，GET /api/subsidies 回傳目前 subsidies 表全部內容，
-    未加密。只給本機/內網開發用，不要在對外開放的機器上執行。）
+    （預設監聽 0.0.0.0:8001，GET /api/subsidies 回傳目前 subsidies 表全部內容，
+    未加密。只給本機/內網開發用，不要在對外開放的機器上執行。
+    8001（而非常見的8000）是為了避開本機其他專案常佔用8000的衝突。）
 """
 import sys
 import io
@@ -24,7 +25,7 @@ from .common import db
 if hasattr(sys.stdout, "buffer") and (sys.stdout.encoding or "").lower() != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
-PORT = 8000
+PORT = 8001
 # react docker 服務（docker-compose.yml）跑在這個 origin，只允許它跨源呼叫。
 ALLOWED_ORIGIN = "http://localhost:3000"
 
