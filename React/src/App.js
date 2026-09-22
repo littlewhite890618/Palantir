@@ -11,6 +11,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import PasswordGate from './components/PasswordGate';
 import HomePage from './pages/HomePage';
+import SearchResultsPage from './pages/SearchResultsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SubsidyDetailPage from './pages/SubsidyDetailPage';
 
@@ -23,6 +24,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/subsidy/:id" element={<SubsidyDetailPage />} />
         </Routes>

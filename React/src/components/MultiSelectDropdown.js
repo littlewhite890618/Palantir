@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 // 機關、金額和期限的多選下拉選單元件，因為三個元件功能相同，所以共同一個元件
 //傳進來的參數為Props: label、options、selectedValues、onChange
 function MultiSelectDropdown({ label, options, selectedValues, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
+  const hasSelection = selectedValues.length > 0;
 
   //切換某個選項的勾選狀態
   const toggleOption = (option) => {
@@ -15,37 +17,45 @@ function MultiSelectDropdown({ label, options, selectedValues, onChange }) {
   };
 
   //篩選器選擇的數量，若有選擇則顯示ex:機關(2)，否則顯示ex:機關
-  const buttonLabel = selectedValues.length > 0
+  const buttonLabel = hasSelection
     ? `${label}（${selectedValues.length}）`
     : label;
 
   return (
     <div style={{ position: 'relative' }}>
       <button
-        className="btn"
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          background: selectedValues.length > 0 ? '#e8f0fe' : '#f1f3f4',
-          color: selectedValues.length > 0 ? '#1a73e8' : '#333',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '7px 12px',
+          border: `1px solid ${hasSelection ? '#1a73e8' : '#e5e7eb'}`,
+          borderRadius: '8px',
+          background: hasSelection ? '#eaf1fd' : '#fff',
+          color: hasSelection ? '#1a73e8' : '#374151',
+          fontSize: '13px',
+          cursor: 'pointer',
         }}
       >
-        {buttonLabel} ▾
+        {buttonLabel}
+        <ChevronDown size={14} strokeWidth={2} />
       </button>
       {/* 展開後的選項清單 */}
       {isOpen && (
         <div style={{
           position: 'absolute',
-          top: '48px',
+          top: '40px',
           left: 0,
-          minWidth: '220px',
+          minWidth: '200px',
           maxHeight: '320px',
           overflowY: 'auto',
           background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-          border: '1px solid #eee',
+          borderRadius: '10px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+          border: '1px solid #eef0f2',
           zIndex: 200,
-          padding: '8px 0',
+          padding: '6px 0',
         }}>
           {options.map((option) => (
             <label
@@ -54,10 +64,10 @@ function MultiSelectDropdown({ label, options, selectedValues, onChange }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '8px 16px',
+                padding: '8px 14px',
                 cursor: 'pointer',
                 fontSize: '14px',
-                color: '#333',
+                color: '#374151',
               }}
             >
               <input

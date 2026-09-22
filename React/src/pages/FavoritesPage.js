@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Heart } from 'lucide-react';
 import { getAllSubsidy } from '../services/subsidyService';
 import { getFavoriteIds, toggleFavorite } from '../services/favoritesService';
 import SubsidyCard from '../components/SubsidyCard';
@@ -46,26 +47,28 @@ function FavoritesPage() {
       <button
         onClick={() => navigate(-1)}
         style={{
+          display: 'flex', alignItems: 'center', gap: '4px',
           border: 'none', background: 'transparent', cursor: 'pointer',
-          color: '#1a73e8', fontSize: '15px', padding: '8px 0', marginTop: '24px',
+          color: '#1a73e8', fontSize: '14px', padding: '8px 0', marginTop: '24px',
         }}
       >
-        ← 返回
+        <ChevronLeft size={16} strokeWidth={1.75} /> 返回
       </button>
 
       <h2 style={{
-        fontSize: '24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+        fontSize: '22px',
         fontWeight: '700',
-        color: '#333',
-        marginTop: '20px',
+        color: '#1a1a1a',
+        marginTop: '16px',
         marginBottom: '20px',
         textAlign: 'center',
       }}>
-        ❤️ 我的收藏
+        <Heart size={19} strokeWidth={1.75} color="#1a73e8" fill="#1a73e8" /> 我的收藏
       </h2>
 
       {favoritedItems.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', color: '#888' }}>
+        <div style={{ textAlign: 'center', color: '#9ca3af', padding: '60px 0' }}>
           還沒有收藏任何補助案
         </div>
       ) : (
