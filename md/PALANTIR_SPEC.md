@@ -234,7 +234,7 @@ data/notices.csv（＋原檔快取 pdf_cache）
 |---|---|---|
 | 國家發展委員會 | `https://www.ndc.gov.tw/News_TopNews.aspx?n=1CE324F4C0BA40AC` | 「最新資訊」篩**補助資訊**類型 |
 | 數位發展部 | `https://digiplus.adi.gov.tw/news_list.html` | 只取**新聞發布**種類 |
-| 經濟部產業發展署（`sites/ida.py`，原 `eii.py`，2026-08改名） | `https://eii.nat.gov.tw/tiip/news_list.php?m=1&page=1` | 只取**主題式公告**種類；另擴充6來源（keid cloud/citd、nqa、assist、tmti、tdri，詳見 PROGRESS.md P2.5） |
+| 經濟部產業發展署（`sites/ida.py`，原 `eii.py`，2026-08改名） | `https://eii.nat.gov.tw/tiip/news_list.php?m=1&page=1` | 只取**主題式公告**種類；另擴充6來源（keid cloud/citd、nqa、assist、tmti、tdri，詳見 openspec change `expand-crawler-agency-sources`） |
 | 經濟部中小及新創企業署 | `https://www.sme.gov.tw/list-tw-2275?page=1` | 「業務消息」篩含**申請須知**字樣 |
 | 國際貿易署 | `https://www.trade.gov.tw/Pages/List.aspx?nodeid=39` | 「公告消息」篩含**申請須知**主題 |
 | 經濟部產業技術司 | `https://www.moea.gov.tw/MNS/doit/news/News.aspx?kind=1&menu_id=13419` | 「最新消息」篩含**計畫/申請事項** |
@@ -258,7 +258,7 @@ data/notices.csv（＋原檔快取 pdf_cache）
 > 連江、澎湖原列型態 C（委外/未上架），已找到可用下載頁改列型態 A（見上）；目前 **0 站需人工**。
 
 > **新增第 29 站**（2026-08，`sites/cip.py`）：原住民族委員會（`https://www.cip.gov.tw/`），
-> 經濟發展公告分類逐筆進子頁篩「申請須知」PDF，歸型態 B。詳見 PROGRESS.md P2.5。
+> 經濟發展公告分類逐筆進子頁篩「申請須知」PDF，歸型態 B。詳見 openspec change `expand-crawler-agency-sources`。
 
 **P2 建置順序（由易到難）**：型態 B 中央靜態站 → 型態 B 直轄市/地方 → 型態 A（11 站） → 型態 C 需 render/Selenium（商發署·臺南·雲林）。
 
