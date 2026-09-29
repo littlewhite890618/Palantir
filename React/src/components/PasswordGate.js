@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Lock, ArrowRight } from 'lucide-react';
 import { unlock, unlockWithStored, hasStoredPassword, LOCAL_API_URL } from '../services/subsidyService';
 
 // PasswordGate 元件負責在使用者輸入正確密碼前，顯示一个輸入密碼的畫面來阻擋對補助案資料的存取。
@@ -75,48 +76,57 @@ function PasswordGate({ children }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f7f8fa',
+      // 淺色漸層背景（比照參考風格），跟表單卡片的純白拉出層次
+      background: 'linear-gradient(160deg, #eef4fd 0%, #f7f9fc 45%, #ffffff 100%)',
       padding: '20px',
     }}>
       <form
         onSubmit={handleSubmit}
         style={{
-          background: 'white',
-          padding: '40px 36px',
-          borderRadius: '16px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
           width: '100%',
-          maxWidth: '380px',
+          maxWidth: '360px',
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🧭</div>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#333', marginBottom: '6px' }}>
+        <h1 style={{ fontSize: '34px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px', marginBottom: '10px' }}>
           Palantir
         </h1>
-        <p style={{ fontSize: '14px', color: '#888', marginBottom: '28px' }}>
-          請輸入密碼以檢視補助案資料
+        {/* 系統沒有帳號機制，只有一組共用密碼（PBKDF2+AES-GCM）。
+            文案照實際行為寫「密碼」，不寫參考風格圖裡的「帳號」，避免讓人誤以為有個人登入。 */}
+        <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.6', marginBottom: '28px' }}>
+          請輸入密碼，驗證後即可開始使用<br />AI 政府補助搜尋服務
         </p>
-      {/* 輸入密碼的欄位，若有錯誤訊息則顯示紅色邊框 */}
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="密碼"
-          autoFocus
-          disabled={busy}
-          style={{
-            width: '100%',
-            padding: '13px 16px',
-            fontSize: '15px',
-            border: error ? '1.5px solid #e53935' : '1.5px solid #ddd',
-            borderRadius: '10px',
-            outline: 'none',
-            marginBottom: '14px',
-            boxSizing: 'border-box',
-            transition: 'border-color 0.2s',
-          }}
-        />
+
+        <div style={{ height: '1px', background: '#e5e7eb', marginBottom: '28px' }} />
+
+        {/* 輸入密碼的欄位，若有錯誤訊息則顯示紅色邊框 */}
+        <div style={{ position: 'relative', marginBottom: '14px' }}>
+          <Lock
+            size={17}
+            strokeWidth={1.75}
+            style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="請輸入密碼"
+            autoFocus
+            disabled={busy}
+            style={{
+              width: '100%',
+              padding: '15px 16px 15px 44px',
+              fontSize: '15px',
+              border: error ? '1.5px solid #e53935' : '1px solid #e5e7eb',
+              borderRadius: '999px',
+              outline: 'none',
+              boxSizing: 'border-box',
+              background: '#fff',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+              transition: 'border-color 0.2s',
+            }}
+          />
+        </div>
 
         {/* 錯誤訊息佔一個固定高度，避免出現時整個表單跳動 */}
         <div style={{
@@ -133,21 +143,31 @@ function PasswordGate({ children }) {
           disabled={busy || !password.trim()}
           style={{
             width: '100%',
-            padding: '13px',
+            padding: '15px',
             fontSize: '15px',
             fontWeight: '600',
             color: 'white',
             background: busy || !password.trim() ? '#b9c9e8' : '#1a73e8',
             border: 'none',
-            borderRadius: '10px',
+            borderRadius: '999px',
             cursor: busy || !password.trim() ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
             transition: 'background 0.2s',
           }}
         >
           {/* 🔐 PBKDF2 刻意設計成慢的（約 0.2 秒），加上解壓縮會再久一點。
               沒有這個狀態提示，使用者會以為按鈕沒反應而重複點擊。 */}
-          {busy ? '解密中...' : '進入'}
+          {busy ? '解密中...' : (<>解鎖 <ArrowRight size={16} strokeWidth={2} /></>)}
         </button>
+
+        {/* 參考風格圖底部是「服務條款／隱私政策」連結，但這是內部工具、沒有這些頁面，
+            放假連結會誤導人。換成真正有用的一句：密碼忘記時該找誰。 */}
+        <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '24px' }}>
+          忘記密碼請洽系統管理員
+        </p>
       </form>
     </div>
   );
