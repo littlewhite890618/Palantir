@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, User } from 'lucide-react';
+import { Heart, LogOut } from 'lucide-react';
 import { lock, getExportedAt } from '../services/subsidyService';
 
 const navStyle = {
@@ -21,10 +21,10 @@ function Navbar() {
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🔒 VIBE: 系統沒有真正的登入帳號機制，只有「記住的解密密碼」。
-  //    這裡的「帳號」icon 沿用原本登出（清除記住的密碼）的行為，
-  //    只是換個更貼近設計稿（user icon）的外觀呈現，功能不變。
+  //    這顆按鈕的行為是登出（清除記住的密碼），文字/icon 直接標「登出」，
+  //    不再用容易誤會成「個人設定」的「帳號」字樣（2026-09-29 調整）。
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const handleAccountClick = () => {
+  const handleLogoutClick = () => {
     if (!window.confirm('登出後下次進入需要重新輸入密碼，確定要登出嗎？')) return;
     lock();
     window.location.reload();
@@ -47,7 +47,7 @@ function Navbar() {
         </span>
       </Link>
 
-      {/* 右側：資料更新時間（極低存在感）+ 收藏 + 帳號。
+      {/* 右側：資料更新時間（極低存在感）+ 收藏 + 登出。
           窄螢幕（<480px）時文字標籤自動隱藏，只留 icon（見 App.css）。 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         {exportedAt && (
@@ -66,9 +66,9 @@ function Navbar() {
           </button>
         </Link>
 
-        <button onClick={handleAccountClick} className="navbar-icon-btn" title="帳號">
-          <User size={18} strokeWidth={1.75} />
-          <span className="nav-icon-label">帳號</span>
+        <button onClick={handleLogoutClick} className="navbar-icon-btn" title="登出">
+          <LogOut size={18} strokeWidth={1.75} />
+          <span className="nav-icon-label">登出</span>
         </button>
       </div>
     </nav>
