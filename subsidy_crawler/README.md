@@ -54,3 +54,30 @@ python -m subsidy_crawler.pipeline --skip-db  # 不碰資料庫
    「開始位置」填 `C:\Users\evalu\Desktop\JOHNNY\n8ntest`
 5. 設定：勾「如果錯過排程的開始時間，儘快執行工作」；「如果工作執行超過下列時間，就停止」設 8 小時
 6. 存檔後在清單上按右鍵「執行」手動跑一次，結束後看「上次執行結果」是否為 `0x0`，並檢查 `data/run_summary.json`
+
+## 本機開發 API 與新案審核頁
+
+```
+python -m subsidy_crawler.dev_api      # 本機 API（127.0.0.1:8001）
+docker compose up react                # 前端 localhost:3000 →「新案審核」
+```
+
+`dev_api.py` 的端點（**只監聽 127.0.0.1**：沒有任何認證，加上審核寫入後，綁 `0.0.0.0`
+等於同網段的人都能改資料庫；瀏覽器跑在本機，前端不受影響）：
+
+| 端點 | 用途 |
+|---|---|
+| `GET /api/subsidies` | 正式表全部內容（未加密），本機前端資料來源 |
+| `GET /api/pending` | 待審新案；有疑似舊案時一併帶出該舊案內容供並排比對 |
+| `GET /api/run-summary` | 最近一次管線執行摘要；沒跑過回 `{"exists": false}` |
+| `POST /api/pending/approve` | `{"id": n}` 核准 → 寫入正式表、標記 approved |
+| `POST /api/pending/reject` | `{"id": n}` 退回 → 標記 rejected（不寫正式表） |
+
+審核頁在**管理台** `localhost:3000/#/admin`：獨立版面（深色標題列，不是搜尋器的導覽列），
+逐筆「通過」「退回」，點一列展開看完整內容，疑似舊案會把新案與既有案左右並排比對。
+搜尋器那邊沒有任何通往管理台的連結，要自己輸入網址。
+
+**只在本機開發模式存在**：是否打包由 `NODE_ENV` 決定（正式 build 時壓縮器會把管理台的
+程式碼與字串整段刪除），是否註冊路由再由 `REACT_APP_LOCAL_API_URL` 把關（只有
+docker-compose 的 react 服務會設）。正式發布版本裡搜尋不到審核相關字串，也沒有任何
+寫入端點的呼叫。

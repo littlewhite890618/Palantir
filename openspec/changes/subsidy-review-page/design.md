@@ -19,7 +19,7 @@
 ## Decisions
 
 ### D1：審核頁的存在條件綁在 `LOCAL_API_URL`，不另外做開關
-- 做法：`App.js` 只在 `LOCAL_API_URL` 有值時註冊 `/review` 路由；`Navbar` 同條件才渲染入口；`ReviewPage` 自己再判斷一次，沒有就顯示「本機開發模式才可使用」。
+- 做法：`App.js` 用 `process.env.NODE_ENV`（打包時折疊）決定要不要把 `ReviewPage` 打包進來，再用 `LOCAL_API_URL` 決定要不要註冊 `/admin` 路由；`ReviewPage` 自己再判斷一次，沒有就顯示「本機開發模式才可使用」。
 - 為什麼：這是現成、已驗證的分界（`PasswordGate` 用同一個變數），正式 build 不會帶入這個變數，等於從根本上不可能誤把審核頁發布出去。三層各自判斷是為了「直接輸入網址」也擋得住。
 
 ### D2：API 路由用既有的 `BaseHTTPRequestHandler` 手寫分派，不引入框架
@@ -46,6 +46,11 @@
 - 上次執行時間放頁面頂端一行（例如「上次執行：2026-09-22 03:44 成功」）。
 - 手機寬度下兩欄改成上下堆疊（沿用現有 RWD 做法）。
 
+### D9：審核頁改為獨立管理台版面 `/admin`（2026-09-24 調整）
+- 做法：路由 `/admin` 套 `AdminLayout`（自己的深色標題列：管理台名稱＋目前功能＋回搜尋器連結），搜尋器各頁改由 `MainLayout` 提供 `Navbar`，兩者用 react-router 的巢狀路由＋`Outlet` 分開；`Navbar` 不再有審核入口。
+- 為什麼：審核是後台工作、跟給顧問看的搜尋器是兩種使用情境，共用導覽列會讓搜尋器出現只有自己看得懂的入口。獨立版面後，搜尋器完全不知道審核頁的存在。
+- 考慮過但不採用：另開一個 React 專案（要維護兩套依賴與啟動流程，目前只有一頁後台，不划算）；由 dev_api 直接吐 HTML（樣式與元件要另寫一套）。
+
 ## Risks / Trade-offs
 
 - [改綁 `127.0.0.1` 後，若使用者原本習慣從別台電腦連本機 API] → 目前只有他本人在本機使用；README 會註明改綁原因與如何暫時改回。
@@ -56,7 +61,7 @@
 ## Migration Plan
 
 1. 這個 change 只改本機開發路徑，正式站不受影響，不需要資料庫 migration。
-2. 使用者端流程：`python -m subsidy_crawler.dev_api` → `docker compose up react` → 開 `localhost:3000` → 點導覽列「審核」。
+2. 使用者端流程：`python -m subsidy_crawler.dev_api` → `docker compose up react` → 開 `localhost:3000/#/admin`。
 3. 回滾：revert 程式即可；待審表與正式表的資料都不會因為回滾而改變。
 
 ## Open Questions

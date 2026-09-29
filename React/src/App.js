@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Outlet } from 'react-router-dom';
 // 📌 HashRouter、Routes、Route 是頁面切換工具
 // 就像電梯控制系統，負責決定按哪個按鈕要去哪個樓層
 //
@@ -14,6 +14,26 @@ import HomePage from './pages/HomePage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SubsidyDetailPage from './pages/SubsidyDetailPage';
+import { LOCAL_API_URL } from './services/subsidyService';
+// ⚠️ 管理台（新案審核）用 NODE_ENV 判斷（不是 REACT_APP_LOCAL_API_URL），這是刻意的：
+// CRA 只保證把 process.env.NODE_ENV 折成字面值，正式 build 會變成
+// 'production' === 'production' → 壓縮器把整個 require 分支連同 ReviewPage／AdminLayout
+// 的字串一起從 bundle 刪除。REACT_APP_* 沒設定時不會被折疊（實測 2026-09-23），
+// 程式碼仍會被打包進正式站——雖然不顯示，但任何人都讀得到審核流程與 API 路徑。
+// 執行時是否真的顯示，另外由 LOCAL_API_URL 把關（見下方 Route 與 ReviewPage 本身）。
+const isDev = process.env.NODE_ENV !== 'production';
+const ReviewPage = isDev ? require('./pages/ReviewPage').default : null;
+const AdminLayout = isDev ? require('./components/AdminLayout').default : null;
+
+// 搜尋器（給顧問用的前台）：共用 Navbar。管理台不走這裡，所以搜尋器不會有審核入口。
+function MainLayout() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+}
 
 function App() {
   return (
@@ -21,12 +41,20 @@ function App() {
       {/* 📌 PasswordGate 包在最外層（連 Navbar 都包進去）
           ——沒解開密碼之前，整個站不會渲染任何東西 */}
       <PasswordGate>
-        <Navbar />
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchResultsPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/subsidy/:id" element={<SubsidyDetailPage />} />
+          {/* 管理台：獨立版面、獨立路徑，只在本機開發模式存在（見上方說明） */}
+          {AdminLayout && LOCAL_API_URL && (
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<ReviewPage />} />
+            </Route>
+          )}
+
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/subsidy/:id" element={<SubsidyDetailPage />} />
+          </Route>
         </Routes>
       </PasswordGate>
     </HashRouter>

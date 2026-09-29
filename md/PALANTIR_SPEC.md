@@ -27,6 +27,7 @@ Palantir 前端（`React/`）規格文件。依 [`DEV_WORKFLOW.md`](DEV_WORKFLOW
 > **寫入方式（2026-09 起）**：管線不再整表覆蓋 `subsidies`。新抓到的案子先進待審表
 > `subsidies_pending`（欄位同 `subsidies`，另加 `status` pending/approved/rejected、`first_seen_at`、
 > `reviewed_at`、`suspected_dup_of`），審核通過才寫進 `subsidies`。身分 key＝（`category`, `source_url`）。
+> 審核在本機管理台 `/#/admin` 進行（獨立版面、只在本機開發模式存在，透過 `dev_api.py` 寫回資料庫）。
 > 詳見 [`subsidy_crawler/README.md`](../subsidy_crawler/README.md)「一鍵管線＋排程＋監控」。
 
 完整欄位（`\d subsidies`）：`id / title / category / amount / start_date / deadline /

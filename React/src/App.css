@@ -157,3 +157,54 @@ button {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* 審核頁：通過 / 退回按鈕 */
+.review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.review-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 審核頁：疑似舊案並排比對，窄螢幕改成上下堆疊（沿用 480px 斷點） */
+@media (max-width: 480px) {
+  .review-compare-row {
+    flex-direction: column;
+  }
+}
+
+/* 管理台（新案審核）標題列的「回搜尋器」連結 */
+.admin-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #d1d5db;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.admin-back:hover {
+  color: #fff;
+  border-color: #6b7280;
+}
+
+/* 窄螢幕：標題列只留管理台名稱，副標省略 */
+@media (max-width: 480px) {
+  .admin-subtitle {
+    display: none;
+  }
+}

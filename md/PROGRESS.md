@@ -10,7 +10,7 @@
 - [x] 2.2 增量偵測 ＋「本次新增」報表：新案進待審表 `subsidies_pending`＋`data/new_this_run.csv`
 - [x] 2.3 告警（只寫檔）：`data/run_summary.json`＋`data/alerts.log`（管線失敗、萃取失敗 ≥10%）
 - [x] 2.4 驗證：測試庫實測 165 筆 → 新案 6、跳過 154、疑似舊案 2，正式表未變動
-- [ ] 2.5 N1 新案上線通知（9/16–9/30）：新案經人工審核後才呈現給前端（OpenSpec `subsidy-review-page`）
+- [ ] 2.5 N1 新案上線通知（9/16–9/30）：本機管理台 `/#/admin` 審核頁（OpenSpec `subsidy-review-page`，程式完成待驗證）；export 只輸出已審核、前端鈴鐺待做
 - [ ] 2.6 N2 新案列表查看（9/30–10/6）：前端頁面列出新捕捉的補助案
 
 ## 3. C. 行事曆模組（10/7–10/30）
