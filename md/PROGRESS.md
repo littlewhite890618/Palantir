@@ -11,7 +11,7 @@
 - [x] 2.3 告警（只寫檔）：`data/run_summary.json`＋`data/alerts.log`（管線失敗、萃取失敗 ≥10%）
 - [x] 2.4 驗證：測試庫實測 165 筆 → 新案 6、跳過 154、疑似舊案 2，正式表未變動
 - [x] 2.5 N1 新案上線通知（9/16–9/30）：管理台 `/#/admin` 審核頁（`subsidy-review-page`）＋搜尋器通知鈴鐺／未讀徽章／popover（`subsidy-notification-bell`）；點 popover 導向 `/new-cases` 占位頁，清單內容屬 N2
-- [ ] 2.6 N2 新案列表查看（9/30–10/6）：前端頁面列出新捕捉的補助案
+- [x] 2.6 N2 新案列表查看（9/30–10/6）：`/new-cases` 列出「最近一批通知」的審核通過新案（OpenSpec `new-cases-list`）；卡片重用搜尋頁 SubsidyCard，可點進詳細頁、可收藏
 
 ## 3. C. 行事曆模組（10/7–10/30）
 

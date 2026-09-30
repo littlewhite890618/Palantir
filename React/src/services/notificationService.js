@@ -14,6 +14,9 @@ import { LOCAL_API_URL } from './subsidyService';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const LAST_SEEN_KEY = 'palentir_notif_last_seen';
+// 前一次的已讀時間：新案列表要顯示「剛才通知的那批」，但點鈴鐺當下 LAST_SEEN 就被推到
+// 「現在」了，用它去算一定是 0 筆。所以覆蓋前先把舊值留在這裡，列表頁改用它當分界。
+const PREV_SEEN_KEY = 'palentir_notif_prev_seen';
 
 // LOCAL_API_URL 形如 http://localhost:8001/api/subsidies，去掉結尾那段就是 API base。
 const API_BASE = LOCAL_API_URL ? LOCAL_API_URL.replace(/\/api\/subsidies\/?$/, '') : null;
@@ -42,13 +45,40 @@ export function getLastSeen() {
   }
 }
 
-// 點開鈴鐺時呼叫：把「現在」記成上次已讀時間，之後只有比這更晚審核通過的才算新
+// 前一次的已讀時間；沒有紀錄回 null，代表「還沒讀過任何一批」
+export function getPrevLastSeen() {
+  try {
+    return localStorage.getItem(PREV_SEEN_KEY) || null;
+  } catch (error) {
+    console.error('讀取前一次通知已讀時間失敗', error);
+    return null;
+  }
+}
+
+// 點開鈴鐺時呼叫：把「現在」記成上次已讀時間，之後只有比這更晚審核通過的才算新。
+// 覆蓋前先把舊值搬到 PREV_SEEN_KEY，新案列表才知道「剛才通知的是哪一批」。
 export function markSeen() {
   try {
+    const prev = localStorage.getItem(LAST_SEEN_KEY);
+    if (prev) localStorage.setItem(PREV_SEEN_KEY, prev);
+    else localStorage.removeItem(PREV_SEEN_KEY);   // 首次已讀：前次為「從未讀過」＝顯示全部
     localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
   } catch (error) {
     console.error('寫入通知已讀時間失敗', error);
   }
+}
+
+// 新案列表要顯示的那批：審核時間晚於「前一次已讀時間」的案子。
+// 沒有前次紀錄（從未讀過、或清過瀏覽器資料）就回全部，跟鈴鐺首次把全部算成未讀一致。
+export function filterLatestBatch(rows) {
+  if (!Array.isArray(rows)) return [];
+  const prev = getPrevLastSeen();
+  if (!prev) return rows;
+  const prevTime = new Date(prev).getTime();
+  return rows.filter((r) => {
+    const t = new Date(r.reviewed_at).getTime();
+    return !isNaN(t) && t > prevTime;
+  });
 }
 
 // 未讀筆數：reviewed_at 晚於上次已讀時間的筆數。沒有已讀紀錄就全部算未讀。

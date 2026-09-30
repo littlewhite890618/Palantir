@@ -10,7 +10,8 @@ deploy_palantir 的 `npm run build` 是在本機直接執行、完全不經過�
 端點：
     GET  /api/subsidies            正式表全部內容（未加密）
     GET  /api/pending              待審新案（status=pending），疑似舊案一併帶出舊案內容
-    GET  /api/approved             已審核通過清單（status=approved），供前端通知鈴鐺算未讀數
+    GET  /api/approved             已審核通過清單（status=approved）：完整欄位＋對應的
+                                   subsidies.id，供通知鈴鐺算未讀數、新案列表頁畫卡片
     GET  /api/run-summary          最近一次管線執行摘要（沒跑過回 {"exists": false}）
     POST /api/pending/approve      {"id": n} 核准 → 寫入正式表、標記 approved
     POST /api/pending/reject       {"id": n} 退回 → 標記 rejected（不寫正式表）
@@ -103,18 +104,25 @@ def _fetch_pending():
     return out
 
 
-# 已審核通過清單：只回通知鈴鐺算未讀數需要的欄位（標題＋審核時間），不回整列內容。
+# 已審核通過清單：回完整欄位（新案列表頁要畫卡片），並 LEFT JOIN 正式表取得 subsidies.id。
+# 為什麼要 JOIN：卡片點下去要連到 /subsidy/:id，那個 id 是正式表的、不是待審表的。
+# 用（category, source_url）比對是因為這就是增量偵測／待審唯一鍵用的同一組身分 key
+# （subsidies_pending 上就有 UNIQUE (category, source_url)），不必另外加外鍵欄位。
+# LEFT JOIN 而非 INNER：正式表那筆若被手動刪掉，這筆仍要出現在清單（subsidy_id 為 null），
+# 只是前端會渲染成不可點的卡片，不會整筆消失。
 # 8/22 那批繞過審核流程直接寫進 subsidies 的舊資料，在待審表裡沒有紀錄，天然不會出現在這裡。
 _APPROVED_SQL = """
-SELECT id, title, category, reviewed_at
-FROM subsidies_pending
-WHERE status = 'approved'
-ORDER BY reviewed_at DESC, id DESC
+SELECT p.*, s.id AS subsidy_id
+FROM subsidies_pending p
+LEFT JOIN subsidies s
+  ON s.category = p.category AND s.source_url = p.source_url
+WHERE p.status = 'approved'
+ORDER BY p.reviewed_at DESC, p.id DESC
 """
 
 
 def _fetch_approved():
-    """已審核通過的案子，依審核時間新到舊。純讀取，不改任何狀態。
+    """已審核通過的案子（完整欄位＋對應正式表 id），依審核時間新到舊。純讀取，不改任何狀態。
     待審表可能還不存在（跟 /api/pending 同款防呆）→ 先確保建表，回空清單而不是 500。"""
     conn = db.connect()
     try:

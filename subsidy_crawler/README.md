@@ -69,7 +69,7 @@ docker compose up react                # 前端 localhost:3000 →「新案審�
 |---|---|
 | `GET /api/subsidies` | 正式表全部內容（未加密），本機前端資料來源 |
 | `GET /api/pending` | 待審新案；有疑似舊案時一併帶出該舊案內容供並排比對 |
-| `GET /api/approved` | 已審核通過清單（含 reviewed_at），供搜尋器通知鈴鐺算未讀數 |
+| `GET /api/approved` | 已審核通過清單：完整欄位＋對應的 `subsidies.id`，供通知鈴鐺算未讀數、新案列表頁畫卡片 |
 | `GET /api/run-summary` | 最近一次管線執行摘要；沒跑過回 `{"exists": false}` |
 | `POST /api/pending/approve` | `{"id": n}` 核准 → 寫入正式表、標記 approved |
 | `POST /api/pending/reject` | `{"id": n}` 退回 → 標記 rejected（不寫正式表） |
