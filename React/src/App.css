@@ -208,3 +208,74 @@ button {
     display: none;
   }
 }
+
+/* 通知鈴鐺：未讀數字徽章（疊在鈴鐺 icon 右上角） */
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* 通知鈴鐺：點開後的 popover */
+.notif-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  z-index: 200;
+}
+
+.notif-popover-link {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1a73e8;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.notif-popover-link:hover {
+  background: #f3f6fc;
+}
+
+.notif-popover-empty {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+/* 窄螢幕：popover 靠右對齊會超出畫面，改用固定邊距並限制寬度 */
+@media (max-width: 480px) {
+  .notif-popover {
+    right: -8px;
+    min-width: 0;
+    max-width: calc(100vw - 32px);
+  }
+
+  .notif-popover-link,
+  .notif-popover-empty {
+    white-space: normal;
+  }
+}

@@ -14,6 +14,9 @@ import HomePage from './pages/HomePage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SubsidyDetailPage from './pages/SubsidyDetailPage';
+// 新案列表（通知鈴鐺的目的地）用一般 import，刻意不像管理台那樣用 NODE_ENV 排除：
+// 這頁規劃要跟鈴鐺一起上線給一般使用者，現在排除、之後上線再加回來等於白做兩次。
+import NewCasesPage from './pages/NewCasesPage';
 import { LOCAL_API_URL } from './services/subsidyService';
 // ⚠️ 管理台（新案審核）用 NODE_ENV 判斷（不是 REACT_APP_LOCAL_API_URL），這是刻意的：
 // CRA 只保證把 process.env.NODE_ENV 折成字面值，正式 build 會變成
@@ -54,6 +57,8 @@ function App() {
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/subsidy/:id" element={<SubsidyDetailPage />} />
+            {/* 新案列表：跟通知鈴鐺同一個顯示條件（取得到已審核資料才有意義） */}
+            {LOCAL_API_URL && <Route path="/new-cases" element={<NewCasesPage />} />}
           </Route>
         </Routes>
       </PasswordGate>

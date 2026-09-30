@@ -10,6 +10,7 @@ deploy_palantir 的 `npm run build` 是在本機直接執行、完全不經過�
 端點：
     GET  /api/subsidies            正式表全部內容（未加密）
     GET  /api/pending              待審新案（status=pending），疑似舊案一併帶出舊案內容
+    GET  /api/approved             已審核通過清單（status=approved），供前端通知鈴鐺算未讀數
     GET  /api/run-summary          最近一次管線執行摘要（沒跑過回 {"exists": false}）
     POST /api/pending/approve      {"id": n} 核准 → 寫入正式表、標記 approved
     POST /api/pending/reject       {"id": n} 退回 → 標記 rejected（不寫正式表）
@@ -102,6 +103,30 @@ def _fetch_pending():
     return out
 
 
+# 已審核通過清單：只回通知鈴鐺算未讀數需要的欄位（標題＋審核時間），不回整列內容。
+# 8/22 那批繞過審核流程直接寫進 subsidies 的舊資料，在待審表裡沒有紀錄，天然不會出現在這裡。
+_APPROVED_SQL = """
+SELECT id, title, category, reviewed_at
+FROM subsidies_pending
+WHERE status = 'approved'
+ORDER BY reviewed_at DESC, id DESC
+"""
+
+
+def _fetch_approved():
+    """已審核通過的案子，依審核時間新到舊。純讀取，不改任何狀態。
+    待審表可能還不存在（跟 /api/pending 同款防呆）→ 先確保建表，回空清單而不是 500。"""
+    conn = db.connect()
+    try:
+        db.ensure_pending_table(conn)
+        conn.commit()
+        with conn.cursor() as cur:
+            cur.execute(_APPROVED_SQL)
+            return _rows(cur)
+    finally:
+        conn.close()
+
+
 def _fetch_run_summary():
     """最近一次管線執行摘要；沒跑過（檔案不存在）不算錯誤。"""
     if not os.path.exists(monitor.SUMMARY_PATH):
@@ -142,6 +167,7 @@ class Handler(BaseHTTPRequestHandler):
         routes = {
             "/api/subsidies": _fetch_all,
             "/api/pending": _fetch_pending,
+            "/api/approved": _fetch_approved,
             "/api/run-summary": _fetch_run_summary,
         }
         fn = routes.get(self.path)
