@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Heart } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { getAllSubsidy } from '../services/subsidyService';
 import { getFavoriteIds, toggleFavorite } from '../services/favoritesService';
 import SubsidyCard from '../components/SubsidyCard';
@@ -34,42 +34,31 @@ function FavoritesPage() {
 
   if (loading) {
     return (
-      <div className="page-container" style={{ textAlign: 'center', marginTop: '100px', color: '#888' }}>
-        載入中...
-      </div>
+      <div className="page-container" style={{ paddingTop: '26px', paddingBottom: '70px' }}><div className="state-block">載入中…</div></div>
     );
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ paddingTop: '26px', paddingBottom: '70px' }}>
 
       {/* 返回按鈕（比照詳細頁，回到上一頁） */}
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '4px',
-          border: 'none', background: 'transparent', cursor: 'pointer',
-          color: '#1a73e8', fontSize: '14px', padding: '8px 0', marginTop: '24px',
-        }}
-      >
-        <ChevronLeft size={16} strokeWidth={1.75} /> 返回
+      <button onClick={() => navigate(-1)} className="btn-quiet">
+        <ChevronLeft size={15} strokeWidth={2} /> 返回
       </button>
 
-      <h2 style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-        fontSize: '22px',
-        fontWeight: '700',
-        color: '#1a1a1a',
-        marginTop: '16px',
-        marginBottom: '20px',
-        textAlign: 'center',
-      }}>
-        <Heart size={19} strokeWidth={1.75} color="#1a73e8" fill="#1a73e8" /> 我的收藏
-      </h2>
+      <div className="page-head">
+        <h2>我的收藏</h2>
+        <p className="page-head-note">
+          {favoritedItems.length > 0
+            ? <>已收藏 <span className="num" style={{ fontWeight: 700, color: 'var(--ink)' }}>{favoritedItems.length}</span> 件</>
+            : '收藏的補助案只存在這台電腦，換裝置看不到'}
+        </p>
+      </div>
 
       {favoritedItems.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#9ca3af', padding: '60px 0' }}>
-          還沒有收藏任何補助案
+        <div className="state-block">
+          <strong>還沒有收藏任何補助案</strong>
+          在搜尋結果或補助案詳細頁按下愛心，就會出現在這裡。
         </div>
       ) : (
         favoritedItems.map((item) => (

@@ -11,36 +11,20 @@ import { ArrowLeft } from 'lucide-react';
 //    那些是給多人使用情境設計的，現階段加了也沒有實際功能。
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const barStyle = {
-  backgroundColor: '#fff',
-  color: '#1a1a1a',
-  padding: '0 24px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  borderBottom: '1px solid #e5e7eb',
-  height: '60px',
-  position: 'sticky',
-  top: 0,
-  zIndex: 100,
-};
-
 function AdminLayout() {
   return (
     <>
-      <div style={barStyle}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', minWidth: 0 }}>
-          <span style={{ fontWeight: 700, fontSize: '19px', letterSpacing: '-0.2px' }}>
-            Palantir
-          </span>
-          <span className="admin-subtitle" style={{ fontSize: '13px', color: '#9ca3af' }}>
-            管理台
-          </span>
+      {/* 管理台沿用搜尋器的抬頭樣式，只在名稱後面加一條分隔線標出分支——
+          一眼看得出「還在同一個系統，但不在前台」，不必用深色背景嚇人。 */}
+      <div className="navbar">
+        <div style={{ display: 'flex', alignItems: 'baseline', minWidth: 0 }}>
+          <span className="wordmark">Palantir</span>
+          <span className="wordmark-branch">管理台</span>
         </div>
 
         {/* 本機模式下搜尋器就在同一個 app 裡，留一條路回去，不用自己改網址 */}
-        <Link to="/" className="admin-back">
-          <ArrowLeft size={15} strokeWidth={1.75} /> 回搜尋器
+        <Link to="/" className="btn-quiet">
+          <ArrowLeft size={15} strokeWidth={2} /> 回搜尋器
         </Link>
       </div>
 

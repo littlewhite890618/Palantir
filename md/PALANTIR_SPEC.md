@@ -65,7 +65,10 @@ description / created_at / source_url / subsidy_timeline / eligibility / require
 | 30天內截止 | 今天 ≤ `deadline` < 今天+30天 |
 | 30-90天內截止 | 今天+30天 ≤ `deadline` < 今天+90天 |
 | 90天以上（長期） | `deadline` ≥ 今天+90天 |
-| 未提供期限 | 空值 |
+| 未提供期限 | 空值，或解析不出任何日期 |
+
+`deadline` 是自由文字（多為民國年），解析邏輯在 `utils/deadline.js::parseLatestDeadline()`，
+與截止日行事曆共用。
 
 **設計決定**：已截止的案子刻意保留成可篩選選項，不預設隱藏、不從清單移除。過期資料
 要不要繼續顯示是產品層面的決定，不該在篩選器裡默默幫使用者做掉。
@@ -148,6 +151,23 @@ localStorage 版本。
 2. ✅（2026-07-26 驗證）`get-all-subsidy` webhook 已回傳含 `description`、`eligibility`、
    `required_documents`、`subsidy_timeline` 的完整欄位（回應為 `SELECT *`，207 筆）。
    因此詳細頁的申請資格/應備資料區塊與卡片描述，只要該列 DB 有值就會顯示，無需再改 webhook。
+
+## 截止日行事曆（`/calendar`，`CalendarPage`）
+
+C1 行事曆＋C2 當日截止案查看，OpenSpec change `subsidy-deadline-calendar`。
+
+- **入口**：`Navbar` 行事曆圖示（通知鈴鐺之後、我的收藏之前）。資料來自 `getAllSubsidy()`，
+  正式站也有，所以**不**受 `LOCAL_API_URL` 限制（跟通知鈴鐺不同）。
+- **只列有案子截止的日期**，不是完整月曆。每格顯示日、星期、件數。已過與未過的日期樣式相同，不做顏色區分。
+- **一次一個月**（「YYYY 年 M 月」），左右箭頭只在「有案子的月份」之間跳，不顯示空月份，頭尾箭頭停用。
+  預設本月；本月沒案子 → 之後最近的有案月份；之後都沒有 → 最晚的有案月份。目前月份存在網址
+  `?m=YYYY-MM`，從詳細頁返回會還原。
+- **截止日判定**：`utils/deadline.js` 的 `parseLatestFullDate()`——跟搜尋頁共用同一組正則與
+  民國年轉換，多個日期取最晚；**只認年月日俱全的日期**。只有年月（「115年6月」）或只有年的
+  不推測成 1 號，跟「額滿為止」等純文字一樣不列入。搜尋頁期限篩選仍用
+  `parseLatestDeadline()`（會退回年月/年），兩者刻意不同。
+- **點日期**：置中 modal（半透明遮罩），每列顯示 id、計畫名稱（`title`）、機關（`category`），
+  整列可點進 `/subsidy/:id`。關閉：關閉鈕、點遮罩、Esc。從詳細頁返回時 modal 是關閉的。
 
 ---
 

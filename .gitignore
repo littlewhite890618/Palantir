@@ -25,3 +25,7 @@ _dl/
 
 # React 的舊 git 歷史備份（整併後保留在本機、不進版控）
 _react_git_backup/
+
+# 本機安裝的 AI agent skills（如 npx skills add 裝的 frontend-design）：
+# 是個人開發工具設定，不是專案程式碼，不進版控。
+.agents/

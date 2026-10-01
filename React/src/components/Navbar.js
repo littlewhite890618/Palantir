@@ -1,21 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Heart, LogOut, Bell } from 'lucide-react';
+import { Heart, LogOut, Bell, CalendarDays } from 'lucide-react';
 import { lock, getExportedAt, LOCAL_API_URL } from '../services/subsidyService';
 import { fetchApproved, countUnread, markSeen } from '../services/notificationService';
 
-const navStyle = {
-  backgroundColor: '#fff',
-  padding: '0 24px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  borderBottom: '1px solid #e5e7eb',
-  height: '60px',
-  position: 'sticky',
-  top: 0,
-  zIndex: 100,
-};
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🧠 VIBE: 通知鈴鐺——管理員在 /admin 審核通過的案子會在這裡顯示未讀數。
@@ -106,31 +94,32 @@ function Navbar() {
   const exportedAt = getExportedAt();
 
   return (
-    <nav className="navbar" style={navStyle}>
+    <nav className="navbar">
 
-      {/* 左側：純文字 Logo，不用裝飾 icon */}
-      <Link to="/" style={{ textDecoration: 'none' }}>
-        <span style={{
-          fontWeight: '700',
-          fontSize: '19px',
-          color: '#1a1a1a',
-          letterSpacing: '-0.2px',
-        }}>
-          Palantir
-        </span>
-      </Link>
+      {/* 左側：抬頭。思源宋體加粗，像卷宗封面上的機關名 */}
+      <Link to="/" className="wordmark">Palantir</Link>
 
       {/* 右側：資料更新時間（極低存在感）+ 收藏 + 登出。
           窄螢幕（<480px）時文字標籤自動隱藏，只留 icon（見 App.css）。 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         {exportedAt && (
-          <span className="navbar-exported" style={{ fontSize: '12px', color: '#9ca3af', marginRight: '12px' }}>
-            資料更新於 {new Date(exportedAt).toLocaleDateString('zh-TW')}
+          <span className="navbar-exported">
+            資料更新 {new Date(exportedAt).toLocaleDateString('zh-TW')}
           </span>
         )}
 
         {/* 通知鈴鐺：只在取得到已審核資料的環境顯示（目前等同本機開發模式） */}
         {LOCAL_API_URL && <NotificationBell />}
+
+        <Link to="/calendar" style={{ textDecoration: 'none' }}>
+          <button
+            className={`navbar-icon-btn${location.pathname === '/calendar' ? ' active' : ''}`}
+            title="截止日行事曆"
+          >
+            <CalendarDays size={18} strokeWidth={1.75} />
+            <span className="nav-icon-label">行事曆</span>
+          </button>
+        </Link>
 
         <Link to="/favorites" style={{ textDecoration: 'none' }}>
           <button

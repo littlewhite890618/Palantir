@@ -14,6 +14,7 @@ import HomePage from './pages/HomePage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SubsidyDetailPage from './pages/SubsidyDetailPage';
+import CalendarPage from './pages/CalendarPage';
 // 新案列表（通知鈴鐺的目的地）用一般 import，刻意不像管理台那樣用 NODE_ENV 排除：
 // 這頁規劃要跟鈴鐺一起上線給一般使用者，現在排除、之後上線再加回來等於白做兩次。
 import NewCasesPage from './pages/NewCasesPage';
@@ -57,6 +58,7 @@ function App() {
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/subsidy/:id" element={<SubsidyDetailPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             {/* 新案列表：跟通知鈴鐺同一個顯示條件（取得到已審核資料才有意義） */}
             {LOCAL_API_URL && <Route path="/new-cases" element={<NewCasesPage />} />}
           </Route>

@@ -5,6 +5,7 @@ import { getAllSubsidy } from '../services/subsidyService';
 import { getFavoriteIds, toggleFavorite } from '../services/favoritesService';
 import MultiSelectDropdown from '../components/MultiSelectDropdown';
 import SubsidyCard from '../components/SubsidyCard';
+import { parseLatestDeadline } from '../utils/deadline';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -44,43 +45,6 @@ function getAmountBucket(amount) {
 // 期限分類的範圍，依據需求設計成五個區間，方便使用者快速篩選
 const DEADLINE_BUCKETS = ['已截止', '30天內截止', '30-90天內截止', '90天以上（長期）', '未提供期限'];
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🐛 BUG FIX（2026-09-29）：deadline 是自由文字，多為民國年（「115年5月5日」
-// 「115/5/5」），JS 的 `new Date(deadline)` 完全看不懂民國年：
-//   - 「115年5月5日」這種中文格式 → 直接判定 Invalid Date → NaN → 所有
-//     `diffDays < N` 比較都是 false → 掉到最後一條 return，誤歸類成
-//     「90天以上（長期）」，把早就過期的計畫當成還很久才到期。
-//   - 「115/5/5」這種斜線格式 → 更糟，會被硬解成西元 115 年（把民國年當
-//     西元年讀），diffDays 變成負幾十萬天，「巧合地」落在「已截止」，
-//     邏輯完全是錯的、只是結果看起來沒問題。
-// 實測 112 筆有填 deadline 的資料，只有 1 筆是標準西元格式能被正確解析。
-//
-// 修法：比對前先用跟後端 postprocess.py::latest_date() 相同的邏輯（正則抓
-// 「年/月/日」，數字<1911 視為民國年 +1911 轉西元，字串內有多個日期取最晚
-// 那個代表這列，例如「第一梯115/3/31；第二梯115/6/1」取 6/1）解析成西元
-// Date 物件，前後端用同一套判斷準則，不再各自猜測。
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DATE_FULL = /(\d{2,4})\s*[年/.\-]\s*(\d{1,2})\s*[月/.\-]\s*(\d{1,2})/g;
-const DATE_YM = /(\d{2,4})\s*[年/.\-]\s*(\d{1,2})\s*月/g;
-const DATE_Y = /(\d{2,4})\s*年/g;
-
-// 民國轉西元：<1911 視為民國年（跟 postprocess.py::_greg() 同款規則）
-const toGregorianYear = (y) => (y < 1911 ? y + 1911 : y);
-
-// 字串裡可能有多個日期（分梯次公告），取「最晚」的那個代表這一列
-function parseLatestDeadline(s) {
-  if (!s) return null;
-  let best = null;
-  const consider = (y, m, d) => {
-    const t = new Date(toGregorianYear(y), m - 1, d).getTime();
-    if (best === null || t > best) best = t;
-  };
-  for (const m of s.matchAll(DATE_FULL)) consider(+m[1], +m[2], +m[3]);
-  if (best === null) for (const m of s.matchAll(DATE_YM)) consider(+m[1], +m[2], 1);
-  if (best === null) for (const m of s.matchAll(DATE_Y)) consider(+m[1], 1, 1);
-  return best === null ? null : new Date(best);
-}
-
 function getDeadlineBucket(deadline) {
   const deadlineDate = parseLatestDeadline(deadline);
   if (!deadlineDate) return '未提供期限'; // 抓不到任何日期（含純文字如「經費用罄為止」）也歸這裡
@@ -108,15 +72,15 @@ function loadFilters() {
 const pageButtonStyle = (isActive, isDisabled) => ({
   minWidth: '34px',
   height: '34px',
-  padding: '0 6px',
-  border: isActive ? '1px solid #1a73e8' : '1px solid #e5e7eb',
-  borderRadius: '8px',
-  background: isActive ? '#1a73e8' : 'white',
-  color: isActive ? 'white' : isDisabled ? '#ccc' : '#374151',
+  padding: '0 8px',
+  border: `1px solid ${isActive ? 'var(--seal)' : 'var(--rule-strong)'}`,
+  borderRadius: '2px',
+  background: isActive ? 'var(--seal)' : 'var(--paper-raised)',
+  color: isActive ? '#fff' : isDisabled ? 'var(--ink-25)' : 'var(--ink-70)',
   cursor: isDisabled ? 'not-allowed' : 'pointer',
+  fontFamily: 'var(--font-mono)',
   fontSize: '13px',
-  fontWeight: isActive ? '600' : '400',
-  transition: 'all 0.15s',
+  fontWeight: isActive ? 700 : 400,
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -216,56 +180,47 @@ function SearchResultsPage() {
   }, [selectedAgencies, selectedAmountRanges, selectedDeadlineRanges, currentPage]);
 
   return (
-    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 20px 60px' }}>
+    <div className="page-container" style={{ paddingTop: '32px', paddingBottom: '60px' }}>
 
-      {/* 頂部搜尋框：延續首頁的搜尋動作，維持同一套視覺語言 */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '24px',
-        padding: '4px 6px 4px 18px',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
-        marginBottom: '20px',
-      }}>
-        <Search size={17} strokeWidth={1.75} color="#9ca3af" />
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          style={{
-            flex: 1, border: 'none', outline: 'none', background: 'transparent',
-            padding: '12px 10px', fontSize: '15px', color: '#1a1a1a',
-          }}
-        />
-        <button
-          onClick={submitSearch}
-          aria-label="搜尋"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '34px', height: '34px', borderRadius: '50%', border: 'none',
-            background: '#1a73e8', color: '#fff', cursor: 'pointer', flexShrink: 0,
-          }}
-        >
-          <Search size={15} strokeWidth={2} />
+      {/* 頂部搜尋框：延續首頁的方正樣式，送出鍵用動詞 */}
+      <div style={{ display: 'flex', marginBottom: '24px' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search
+            size={16}
+            strokeWidth={2}
+            style={{
+              position: 'absolute', left: '13px', top: '50%',
+              transform: 'translateY(-50%)', color: 'var(--ink-25)', pointerEvents: 'none',
+            }}
+          />
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            aria-label="搜尋補助案"
+            className="field"
+            style={{ paddingLeft: '38px', fontSize: '14.5px', borderRight: 'none', borderRadius: '2px 0 0 2px' }}
+          />
+        </div>
+        <button onClick={submitSearch} className="btn btn-primary" style={{ borderRadius: '0 2px 2px 0', padding: '0 22px' }}>
+          搜尋
         </button>
       </div>
 
       {pageLoading ? (
-        <div style={{ textAlign: 'center', marginTop: '80px', color: '#9ca3af' }}>載入中...</div>
+        <div className="state-block">載入中…</div>
       ) : (
         <>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px' }}>
-            找到 {searchResults.length} 個可能符合的補助案
+          <p style={{ color: 'var(--ink-45)', fontSize: '14px', marginBottom: '14px' }}>
+            符合條件 <span className="num" style={{ fontWeight: 700, color: 'var(--ink)' }}>{searchResults.length}</span> 件
           </p>
 
           {/* Filter + Sort：常駐下拉，維持一貫互動 */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             flexWrap: 'wrap', gap: '10px', marginBottom: '20px',
-            paddingBottom: '16px', borderBottom: '1px solid #eef0f2',
+            paddingBottom: '14px', borderBottom: '2px solid var(--ink)',
           }}>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <MultiSelectDropdown
@@ -287,12 +242,13 @@ function SearchResultsPage() {
                 onChange={setSelectedDeadlineRanges}
               />
             </div>
-            <span style={{ fontSize: '13px', color: '#9ca3af' }}>排序：相關性</span>
+            <span style={{ fontSize: '13px', color: 'var(--ink-45)' }}>依相關性排序</span>
           </div>
 
           {currentItems.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#9ca3af', padding: '60px 0' }}>
-              查無相關補助案，請嘗試其他關鍵字
+            <div className="state-block">
+              <strong>沒有符合的補助案</strong>
+              換個關鍵字，或放寬上方的機關、金額、期限篩選。
             </div>
           ) : (
             <div>

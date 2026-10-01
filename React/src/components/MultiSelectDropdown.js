@@ -30,10 +30,10 @@ function MultiSelectDropdown({ label, options, selectedValues, onChange }) {
           alignItems: 'center',
           gap: '4px',
           padding: '7px 12px',
-          border: `1px solid ${hasSelection ? '#1a73e8' : '#e5e7eb'}`,
-          borderRadius: '8px',
-          background: hasSelection ? '#eaf1fd' : '#fff',
-          color: hasSelection ? '#1a73e8' : '#374151',
+          border: `1px solid ${hasSelection ? 'var(--seal)' : 'var(--rule-strong)'}`,
+          borderRadius: '2px',
+          background: hasSelection ? 'var(--seal-wash)' : 'var(--paper-raised)',
+          color: hasSelection ? 'var(--seal)' : 'var(--ink-70)',
           fontSize: '13px',
           cursor: 'pointer',
         }}
@@ -50,10 +50,9 @@ function MultiSelectDropdown({ label, options, selectedValues, onChange }) {
           minWidth: '200px',
           maxHeight: '320px',
           overflowY: 'auto',
-          background: 'white',
-          borderRadius: '10px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-          border: '1px solid #eef0f2',
+          background: 'var(--paper-raised)',
+          borderRadius: '2px',
+          border: '1px solid var(--rule-strong)',
           zIndex: 200,
           padding: '6px 0',
         }}>
@@ -67,7 +66,7 @@ function MultiSelectDropdown({ label, options, selectedValues, onChange }) {
                 padding: '8px 14px',
                 cursor: 'pointer',
                 fontSize: '14px',
-                color: '#374151',
+                color: 'var(--ink-70)',
               }}
             >
               <input

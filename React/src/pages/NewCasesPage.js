@@ -23,20 +23,12 @@ import SubsidyCard from '../components/SubsidyCard';
 // 免得跳到不存在的詳細頁。實務上只有手動刪過正式表資料才會遇到。
 function OrphanCard({ item }) {
   return (
-    <div className="result-item" style={{ cursor: 'default', opacity: 0.75 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#1a1a1a', marginBottom: '4px' }}>
-          {item.title}
-        </h4>
-        <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}>{item.category}</p>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: '4px',
-          fontSize: '12px', color: '#92400e', background: '#fffbeb',
-          borderRadius: '999px', padding: '3px 10px',
-        }}>
-          <AlertCircle size={12} strokeWidth={2} /> 此案已不在資料庫中
-        </span>
-      </div>
+    <div className="dossier" style={{ borderLeftColor: 'var(--ink-25)' }}>
+      <h3 className="dossier-title" style={{ paddingRight: 0 }}>{item.title}</h3>
+      <p className="dossier-agency">{item.category}</p>
+      <span className="stamp stamp--alert">
+        <AlertCircle size={12} strokeWidth={2} /> 此案已不在資料庫中
+      </span>
     </div>
   );
 }
@@ -60,43 +52,39 @@ function NewCasesPage() {
 
   if (!LOCAL_API_URL) {
     return (
-      <div className="page-container" style={{ textAlign: 'center', marginTop: '100px', color: '#888' }}>
-        新案列表只能在本機開發模式使用。
-      </div>
+      <div className="page-container"><div className="state-block">新案列表只能在本機開發模式使用。</div></div>
     );
   }
 
   return (
     <div className="page-container" style={{ paddingBottom: '48px' }}>
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '4px',
-          border: 'none', background: 'transparent', cursor: 'pointer',
-          color: '#1a73e8', fontSize: '14px', padding: '8px 0', marginTop: '24px',
-        }}
-      >
-        <ChevronLeft size={16} strokeWidth={1.75} /> 返回
+      <button onClick={() => navigate(-1)} className="btn-quiet">
+        <ChevronLeft size={15} strokeWidth={2} /> 返回
       </button>
 
-      <h2 style={{ fontSize: '22px', margin: '8px 0 20px' }}>
-        新增的補助案{!loading && !loadError && rows.length > 0 && `（${rows.length}）`}
-      </h2>
+      <div className="page-head">
+        <h2>新增的補助案</h2>
+        <p className="page-head-note">
+          {loading || loadError
+            ? '通過審核的新案會列在這裡'
+            : <>這批通過審核 <span className="num" style={{ fontWeight: 700, color: 'var(--ink)' }}>{rows.length}</span> 件</>}
+        </p>
+      </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', marginTop: '64px', color: '#888' }}>載入中...</div>
+        <div className="state-block">載入中…</div>
       )}
 
       {loadError && (
-        <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '8px',
-                      backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '14px' }}>
-          載入新案清單失敗：{loadError}（確認 dev_api.py 是否已啟動）
+        <div className="notice notice--bad">
+          載入新案清單失敗：{loadError}　請確認 dev_api.py 已啟動。
         </div>
       )}
 
       {!loading && !loadError && rows.length === 0 && (
-        <div style={{ textAlign: 'center', marginTop: '64px', color: '#888' }}>
-          目前沒有新增的補助案。
+        <div className="state-block">
+          <strong>目前沒有新增的補助案</strong>
+          管線抓到新案、而且你在管理台通過審核之後，那批案子會列在這裡。
         </div>
       )}
 

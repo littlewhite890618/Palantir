@@ -1,25 +1,52 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   設計語彙：Google Search × ChatGPT × Claude 的極簡風格。
-   極少色彩、極少陰影、大量留白；藍色只用在搜尋按鈕/連結/選中狀態等關鍵動作。
+   設計語彙：政府文件 × 情報卷宗（2026-09-30 改版）
+
+   為什麼是這個方向：產品叫 Palantir（觀景石／情報卷宗），內容是政府補助案
+   （公文、案號、申請期限、核定金額）。所以視覺語彙直接取自這兩件事——
+   官印墨色、紙張底色、卷宗式的方正邊界、帳冊式的數字對齊，
+   而不是套一個「好看但哪個產品都能用」的模板。
+
+   三個刻意的決定：
+   1. 數字用等寬字體。金額/截止日/案號是結構化資料，對齊了才能上下比對，
+      這是功能不是裝飾——所以只有數字用，說明文字不用。
+   2. 卡片是方正的卷宗，不是圓角 SaaS 卡片。邊界用實線分隔、圓角壓到 2px，
+      靠左側的墨色標記區分類型，不靠到處套同一個灰陰影。
+   3. 全站靠左對齊。這是查資料的工作工具，不是行銷頁，置中會變成宣傳頁氣質。
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 :root {
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --text: #1a1a1a;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --border: #e5e7eb;
-  --border-light: #eef0f2;
-  --accent: #1a73e8;
-  --accent-hover: #1557b0;
-  --accent-soft: #eaf1fd;
+  /* 紙與墨 */
+  --paper: #f7f6f2;          /* 偏冷的紙色，不是暖米色 */
+  --paper-raised: #fffefb;   /* 卡片/浮起的紙 */
+  --ink: #1c1b19;            /* 暖黑墨色，不是純黑 */
+  --ink-70: #4a4642;
+  --ink-45: #6b6560;
+  --ink-25: #9a948c;
+  --rule: #ddd8ce;           /* 分隔線：暖灰，跟紙同一家族 */
+  --rule-strong: #c4bdb0;
+
+  /* 官印藍：主色。深藏青，取自官方印章與帳冊墨水 */
+  --seal: #1e3a5f;
+  --seal-deep: #142943;
+  --seal-wash: #eaeef4;
+
+  /* 硃紅：只給真正緊急的事（即將截止），不當裝飾 */
+  --vermilion: #a6300a;
+  --vermilion-wash: #fbeee9;
+
+  /* 帳冊綠：核可/已通過 */
+  --ledger: #3f6b4f;
+  --ledger-wash: #edf3ee;
+
+  --font-serif: 'Noto Serif TC', 'Songti TC', '宋體', serif;
+  --font-sans: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
 }
 
 html, body {
@@ -28,221 +55,400 @@ html, body {
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Navbar：窄螢幕下收藏/帳號只留 icon，避免文字撐爆導致橫向捲動 */
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: var(--seal);
+}
+
+/* 數字：金額、日期、案號一律等寬，讓它們在列表裡上下對得齊 */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* 焦點：鍵盤操作要看得見，用官印藍的外框 */
+:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.page-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.review-page {
+  max-width: 1080px;
+}
+
+/* ── 導覽列：像卷宗封面上的抬頭，靠左、有份量 ── */
+.navbar {
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 62px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.wordmark {
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: 21px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* 抬頭旁的分支標示（管理台）：用直線分隔而不是 middot 或破折號 */
+.wordmark-branch {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-45);
+  padding-left: 12px;
+  margin-left: 12px;
+  border-left: 1px solid var(--rule-strong);
+}
+
 .navbar-icon-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   border: none;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background 0.15s, color 0.15s;
   background: transparent;
-  color: #555;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-70);
+  padding: 8px 12px;
+  border-radius: 2px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.navbar-icon-btn:hover {
+  background: var(--seal-wash);
+  color: var(--seal);
 }
 
 .navbar-icon-btn.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--seal-wash);
+  color: var(--seal);
 }
 
-@media (max-width: 480px) {
-  .navbar {
-    padding: 0 12px !important;
-  }
-  .navbar-exported,
-  .nav-icon-label {
-    display: none;
-  }
-  .navbar-icon-btn {
-    padding: 8px;
-  }
+.navbar-exported {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-25);
+  margin-right: 14px;
 }
 
-button {
-  font-family: inherit;
+@media (max-width: 520px) {
+  .navbar { padding: 0 14px; }
+  .navbar-exported, .nav-icon-label { display: none; }
+  .navbar-icon-btn { padding: 8px; }
 }
 
-.page-container {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 20px;
+/* ── 卷宗卡片：方正、靠左側墨條、不用灰陰影 ── */
+.dossier {
+  position: relative;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--seal);
+  border-radius: 2px;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  transition: border-color 0.12s, background 0.12s;
 }
 
-/* 審核頁卡片一列要放圖示/標題/機關/金額/截止日/狀態/按鈕/詳情，720px 太窄會擠成好幾行 */
-.review-page {
-  max-width: 1000px;
-}
-
-/* 舊卡片樣式，FavoritesPage 的空狀態等處仍在用；改成極簡邊框，不用陰影 */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 16px;
-}
-
-.tag {
-  display: inline-block;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+a.dossier, .dossier--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.15s, border-color 0.15s;
-  background: var(--surface);
-  color: var(--text);
 }
 
-.btn:hover {
-  background: #f3f4f6;
+.dossier--link:hover {
+  border-color: var(--rule-strong);
+  border-left-color: var(--seal-deep);
+  background: #fff;
 }
+
+/* 右上角的案號：用等寬數字，像卷宗上的編號戳記 */
+.dossier-ref {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-25);
+}
+
+.dossier-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 4px;
+  padding-right: 64px;
+}
+
+.dossier-agency {
+  font-size: 13px;
+  color: var(--ink-45);
+  margin-bottom: 10px;
+}
+
+.dossier-excerpt {
+  font-size: 14px;
+  color: var(--ink-70);
+  line-height: 1.75;
+  margin-bottom: 12px;
+  max-width: 68ch;
+}
+
+/* 帳冊式的資料列：標籤在上、等寬數字在下，欄與欄之間用細線分隔 */
+.ledger-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+
+.ledger-cell {
+  padding-right: 22px;
+  margin-right: 22px;
+  border-right: 1px solid var(--rule);
+}
+
+.ledger-cell:last-child {
+  border-right: none;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+.ledger-label {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-25);
+  margin-bottom: 1px;
+}
+
+.ledger-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.ledger-value--urgent {
+  color: var(--vermilion);
+  font-weight: 700;
+}
+
+.ledger-value--none {
+  font-family: var(--font-sans);
+  color: var(--ink-25);
+}
+
+/* ── 印章式狀態標記：方正、有框線，不是圓角膠囊 ── */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.stamp--pending { color: var(--seal); background: var(--seal-wash); }
+.stamp--approved { color: var(--ledger); background: var(--ledger-wash); }
+.stamp--alert { color: var(--vermilion); background: var(--vermilion-wash); }
+
+/* ── 按鈕 ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.btn:hover { border-color: var(--seal); color: var(--seal); }
 
 .btn-primary {
-  background: var(--accent);
-  color: white;
-  border: 1px solid var(--accent);
+  background: var(--seal);
+  border-color: var(--seal);
+  color: #fff;
 }
 
-.btn-primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+.btn-primary:hover { background: var(--seal-deep); border-color: var(--seal-deep); color: #fff; }
+
+.btn:disabled, .btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-/* 搜尋結果：每張都有清楚的邊界（完整邊框），彼此保持間距，不是分隔線清單 */
-.result-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  background: var(--surface);
+/* 文字型連結按鈕（返回、詳情） */
+.btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--seal);
+  font-size: 13px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  padding: 6px 0;
 }
 
-.result-item:hover {
-  border-color: #c7d2e0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+.btn-quiet:hover { color: var(--seal-deep); text-decoration: underline; }
+
+/* ── 輸入框：方正、細框，聚焦時用官印藍 ── */
+.field {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.12s;
 }
 
-/* 熱門搜尋 pill */
+.field:focus { border-color: var(--seal); }
+.field::placeholder { color: var(--ink-25); }
+
+/* ── 篩選 pill ── */
 .pill {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-secondary);
-  border-radius: 999px;
-  padding: 6px 16px;
+  border: 1px solid var(--rule-strong);
+  background: var(--paper-raised);
+  color: var(--ink-70);
+  border-radius: 2px;
+  padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.12s, color 0.12s;
 }
 
-.pill:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.pill:hover { border-color: var(--seal); color: var(--seal); }
+
+/* ── 頁面抬頭：標題與說明靠左，底下一條實線收邊 ── */
+.page-head {
+  padding: 32px 0 16px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 22px;
 }
 
-/* 審核頁：通過 / 退回按鈕 */
-.review-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid;
-  border-radius: 8px;
-  padding: 6px 12px;
+.page-head h2 {
+  font-size: 25px;
+  margin-bottom: 4px;
+}
+
+.page-head-note {
   font-size: 13px;
-  cursor: pointer;
-  white-space: nowrap;
+  color: var(--ink-45);
 }
 
-.review-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
+/* ── 空狀態／載入：靠左，說清楚下一步 ── */
+.state-block {
+  padding: 56px 0;
+  color: var(--ink-45);
+  font-size: 15px;
+  max-width: 52ch;
 }
 
-/* 審核頁：疑似舊案並排比對，窄螢幕改成上下堆疊（沿用 480px 斷點） */
-@media (max-width: 480px) {
-  .review-compare-row {
-    flex-direction: column;
-  }
+.state-block strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 6px;
 }
 
-/* 管理台（新案審核）標題列的「回搜尋器」連結 */
-.admin-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 13px;
-  padding: 6px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  white-space: nowrap;
+/* 訊息條：成功用帳冊綠、失敗用硃紅，靠左側粗線標示 */
+.notice {
+  border-left: 3px solid;
+  border-radius: 2px;
+  padding: 11px 14px;
+  font-size: 14px;
+  margin-bottom: 14px;
 }
 
-.admin-back:hover {
-  color: #1a73e8;
-  border-color: #1a73e8;
-}
+.notice--ok { border-color: var(--ledger); background: var(--ledger-wash); color: var(--ledger); }
+.notice--bad { border-color: var(--vermilion); background: var(--vermilion-wash); color: var(--vermilion); }
 
-/* 窄螢幕：標題列只留管理台名稱，副標省略 */
-@media (max-width: 480px) {
-  .admin-subtitle {
-    display: none;
-  }
-}
-
-/* 通知鈴鐺：未讀數字徽章（疊在鈴鐺 icon 右上角） */
+/* ── 通知鈴鐺 ── */
 .notif-badge {
   position: absolute;
-  top: -6px;
-  right: -8px;
-  min-width: 16px;
-  height: 16px;
+  top: -5px;
+  right: -7px;
+  min-width: 15px;
+  height: 15px;
   padding: 0 4px;
-  border-radius: 999px;
-  background: #e53935;
+  border-radius: 2px;
+  background: var(--vermilion);
   color: #fff;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 15px;
   text-align: center;
-  box-sizing: border-box;
 }
 
-/* 通知鈴鐺：點開後的 popover */
 .notif-popover {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
-  min-width: 200px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  padding: 6px;
+  min-width: 210px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  padding: 4px;
   z-index: 200;
 }
 
@@ -252,65 +458,58 @@ button {
   padding: 10px 12px;
   border: none;
   background: transparent;
-  border-radius: 6px;
   font-size: 14px;
-  color: #1a73e8;
+  color: var(--seal);
   text-align: left;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.notif-popover-link:hover {
-  background: #f3f6fc;
-}
+.notif-popover-link:hover { background: var(--seal-wash); }
 
 .notif-popover-empty {
   padding: 10px 12px;
   font-size: 14px;
-  color: #9ca3af;
+  color: var(--ink-45);
   white-space: nowrap;
 }
 
-/* 窄螢幕：popover 靠右對齊會超出畫面，改用固定邊距並限制寬度 */
-@media (max-width: 480px) {
-  .notif-popover {
-    right: -8px;
-    min-width: 0;
-    max-width: calc(100vw - 32px);
-  }
-
-  .notif-popover-link,
-  .notif-popover-empty {
-    white-space: normal;
-  }
+@media (max-width: 520px) {
+  .notif-popover { right: -6px; max-width: calc(100vw - 28px); }
+  .notif-popover-link, .notif-popover-empty { white-space: normal; }
 }
 
-/* ── 新案審核頁改版（2026-09-30）：卡片式清單，仿參考設計 ── */
-
-.review-header {
+/* ── 審核頁 ── */
+.review-actions {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin: 24px 0 20px;
-}
-
-.review-header-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  gap: 8px;
   flex-shrink: 0;
 }
 
+.review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid;
+  border-radius: 2px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--paper-raised);
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.review-btn--approve { color: var(--ledger); border-color: var(--ledger); }
+.review-btn--approve:hover:not(:disabled) { background: var(--ledger-wash); }
+.review-btn--reject { color: var(--vermilion); border-color: var(--vermilion); }
+.review-btn--reject:hover:not(:disabled) { background: var(--vermilion-wash); }
+.review-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .review-search {
   position: relative;
-  min-width: 260px;
+  min-width: 280px;
 }
 
 .review-search-icon {
@@ -318,7 +517,7 @@ button {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: var(--ink-25);
   pointer-events: none;
 }
 
@@ -326,116 +525,209 @@ button {
   width: 100%;
   padding: 9px 12px 9px 36px;
   font-size: 13px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
   outline: none;
-  box-sizing: border-box;
-  background: #fff;
 }
 
-.review-search input:focus {
-  border-color: var(--accent);
+.review-search input:focus { border-color: var(--seal); }
+
+/* 疑似舊案並排比對 */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  background: var(--paper);
 }
 
-.review-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 12px;
+.compare-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-45);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 10px;
 }
 
-.review-card-summary {
+.compare-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--ink-25);
+  margin-bottom: 2px;
+}
+
+.compare-value {
+  font-size: 13px;
+  word-break: break-all;
+  padding-bottom: 10px;
+}
+
+.compare-value--differs { color: var(--vermilion); }
+
+@media (max-width: 640px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+
+/* 詳細內容的欄位 */
+.detail-field {
+  border-top: 1px solid var(--rule);
+  padding: 14px 0;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: var(--ink-25);
+  margin-bottom: 5px;
+}
+
+.detail-value {
+  font-size: 14.5px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  max-width: 70ch;
+}
+
+.detail-value--empty {
+  color: var(--ink-25);
+}
+
+/* ── 截止日行事曆：一次一個月，只列有案子截止的日期 ── */
+.cal-month { margin-bottom: 30px; }
+
+.cal-month-nav {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
 }
 
-.review-card-icon {
+.cal-month-label {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--ink);
+  text-align: center;
+}
+
+.cal-month-arrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: var(--paper-raised);
+  color: var(--ink-70);
+  cursor: pointer;
 }
 
-.review-card-meta {
+.cal-month-arrow:hover:not(:disabled) { border-color: var(--seal); background: var(--seal-wash); color: var(--seal); }
+.cal-month-arrow:disabled { color: var(--ink-25); border-color: var(--rule); cursor: not-allowed; }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.cal-day {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.review-card-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.review-status-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.review-status-pending {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.review-dup-badge {
-  margin-left: 8px;
-  font-size: 12px;
-  color: #b91c1c;
-  background-color: #fef2f2;
-  border-radius: 999px;
-  padding: 2px 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.review-detail-link {
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 2px;
+  padding: 10px 12px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cal-day:hover { border-color: var(--seal); background: var(--seal-wash); }
+
+.cal-day-num { font-size: 24px; font-weight: 700; line-height: 1.1; }
+.cal-day-week { font-size: 12px; color: var(--ink-45); }
+.cal-day-count { font-size: 13px; color: var(--seal); margin-top: 4px; }
+
+/* 當日清單：置中 modal，手機上不會像錨定 popover 那樣超出畫面 */
+.cal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 27, 25, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 300;
+}
+
+.cal-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-top: 3px solid var(--seal);
+  border-radius: 2px;
+}
+
+.cal-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.cal-modal-date { font-size: 18px; font-weight: 700; color: var(--ink); }
+.cal-modal-sub { font-size: 13px; color: var(--ink-45); margin-top: 2px; }
+
+.cal-modal-close {
+  display: inline-flex;
+  padding: 6px;
   border: none;
   background: transparent;
-  color: #6b7280;
-  font-size: 13px;
+  color: var(--ink-45);
   cursor: pointer;
-  padding: 6px 4px;
-  white-space: nowrap;
+  border-radius: 2px;
 }
 
-.review-detail-link:hover {
-  color: var(--accent);
+.cal-modal-close:hover { background: var(--seal-wash); color: var(--seal); }
+
+.cal-modal-list {
+  list-style: none;
+  overflow-y: auto;
+  padding: 4px;
 }
 
-/* 窄螢幕：卡片內元素改成上下排列，避免擠成一團 */
-@media (max-width: 640px) {
-  .review-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .review-search {
-    min-width: 0;
-  }
-
-  .review-card-summary {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .review-status-badge {
-    align-self: flex-start;
-  }
+.cal-modal-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 2px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
 }
+
+.cal-modal-list li:last-child .cal-modal-row { border-bottom: none; }
+.cal-modal-row:hover { background: var(--seal-wash); }
+
+.cal-modal-id { grid-row: span 2; font-size: 12px; color: var(--ink-45); padding-top: 2px; }
+.cal-modal-title { font-size: 15px; color: var(--seal); font-weight: 600; }
+.cal-modal-agency { font-size: 13px; color: var(--ink-70); }

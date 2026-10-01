@@ -6,6 +6,17 @@
     <!-- 這是內部工具，不希望被搜尋引擎索引到。
          主流搜尋引擎都遵守這個標記（它擋不住惡意爬蟲，真正的保護是資料本身加密）。 -->
     <meta name="robots" content="noindex, nofollow" />
+
+    <!-- 字體：標題用思源宋體（公文/卷宗的份量感）、內文用思源黑體、
+         數字用等寬（金額/截止日/案號本來就是帳冊式的結構化數字，對齊才好比對）。
+         Google Fonts 對 CJK 會依 unicode-range 分片載入，不會一次下載整包。 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
     <title>補助案搜尋系統</title>
   </head>
   <body>
