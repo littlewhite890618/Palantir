@@ -139,7 +139,6 @@ Palantir/
 ## 🚀 快速上手 (Quick Start)
 
 ### 1. 環境需求
-- Node.js (v18+)
 - Python (3.10+)
 - Docker & Docker Compose
 
